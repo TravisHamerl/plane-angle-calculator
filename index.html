@@ -1,0 +1,2567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plane Angle & Z-Limit Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-dark: #0d1117;
+    --bg-panel: #161b22;
+    --bg-input: #0d1117;
+    --bg-section: #1c2333;
+    --border: #30363d;
+    --border-focus: #58a6ff;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --text-label: #c9d1d9;
+    --green: #00ff88;
+    --red: #ff4444;
+    --amber: #ffaa00;
+    --blue: #58a6ff;
+    --accent: #388bfd;
+  }
+
+  body {
+    font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+    background: var(--bg-dark);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0.5px;
+  }
+
+  header .subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .main-layout {
+    display: flex;
+    flex: 1;
+    min-height: 0; /* allow flex children to shrink below content size */
+    overflow: hidden;
+  }
+
+  .left-panel {
+    width: 520px;
+    min-width: 440px;
+    max-width: 520px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0; /* critical for flex scroll */
+  }
+
+  .right-panel {
+    flex: 1;
+    position: relative;
+    background: #0a0e14;
+  }
+
+  #three-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .section {
+    background: var(--bg-section);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .section-header h2 {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+
+  .section-header .toggle {
+    font-size: 10px;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+
+  .section-header.collapsed .toggle {
+    transform: rotate(-90deg);
+  }
+
+  .section-body {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0; /* prevent flex blowout */
+    overflow: hidden;
+  }
+
+  .section-body.collapsed {
+    display: none;
+  }
+
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .field-row label {
+    font-size: 11px;
+    color: var(--text-label);
+    min-width: 140px;
+    flex-shrink: 0;
+  }
+
+  .field-row input {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 5px 8px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .field-row input:focus {
+    border-color: var(--border-focus);
+  }
+
+  .field-row .unit {
+    font-size: 10px;
+    color: var(--text-dim);
+    min-width: 24px;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 11px;
+    padding: 8px;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    line-height: 1.5;
+  }
+
+  textarea:focus {
+    border-color: var(--border-focus);
+  }
+
+  textarea::placeholder {
+    color: #484f58;
+  }
+
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 6px 16px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.15s;
+  }
+
+  .btn:hover { background: #4a9eff; }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--text-dim);
+    color: var(--text);
+    background: rgba(255,255,255,0.05);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  /* Results */
+  .result-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 3px 12px;
+    font-size: 11px;
+  }
+
+  .result-grid .lbl {
+    color: var(--text-dim);
+    text-align: right;
+  }
+
+  .result-grid .val {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .status-ok { background: rgba(0,255,136,0.15); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
+  .status-fail { background: rgba(255,68,68,0.15); color: var(--red); border: 1px solid rgba(255,68,68,0.3); }
+  .status-warn { background: rgba(255,170,0,0.15); color: var(--amber); border: 1px solid rgba(255,170,0,0.3); }
+
+  .matrix-output {
+    font-size: 10px;
+    line-height: 1.6;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    white-space: pre;
+    overflow-x: auto;
+    position: relative;
+    max-width: 100%;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .copy-btn:hover { color: var(--text); border-color: var(--text-dim); }
+
+  .hidden { display: none !important; }
+
+  .error-msg {
+    color: var(--red);
+    font-size: 11px;
+    padding: 4px 0;
+  }
+
+  /* 3D overlay labels */
+  .scene-label {
+    position: absolute;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-dim);
+    pointer-events: none;
+    white-space: nowrap;
+    text-shadow: 0 0 6px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7), 0 1px 2px rgba(0,0,0,0.9);
+    background: rgba(10, 14, 20, 0.8);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  .view-buttons {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    z-index: 10;
+  }
+  .view-buttons button {
+    background: rgba(20, 28, 38, 0.85);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    cursor: pointer;
+  }
+  .view-buttons button:hover {
+    background: rgba(40, 55, 75, 0.9);
+    color: var(--text);
+  }
+
+  .scene-label.label-green { color: var(--green); }
+  .scene-label.label-red { color: var(--red); }
+  .scene-label.label-blue { color: var(--blue); }
+  .scene-label.label-amber { color: var(--amber); }
+
+  /* Inline color spans used in result grids (not 3D overlays) */
+  .color-green { color: var(--green); font-weight: 700; }
+  .color-red { color: var(--red); font-weight: 700; }
+  .color-amber { color: var(--amber); font-weight: 700; }
+  .color-blue { color: var(--blue); font-weight: 700; }
+
+  /* Scrollbar */
+  .left-panel::-webkit-scrollbar { width: 6px; }
+  .left-panel::-webkit-scrollbar-track { background: transparent; }
+  .left-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .divider { height: 1px; background: var(--border); margin: 2px 0; }
+
+  .inline-note {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-style: italic;
+    padding: 2px 0;
+  }
+
+  /* Batch table */
+  .batch-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+
+  .batch-table th {
+    text-align: left;
+    padding: 4px 6px;
+    color: var(--text-dim);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background: var(--bg-section);
+    z-index: 1;
+  }
+
+  .batch-table td {
+    padding: 3px 6px;
+    border-bottom: 1px solid rgba(48,54,61,0.4);
+    white-space: nowrap;
+  }
+
+  .batch-table tr { cursor: pointer; transition: background 0.1s; }
+  .batch-table tr:hover { background: rgba(88,166,255,0.08); }
+
+  .batch-row-ok td:first-child { border-left: 3px solid var(--green); }
+  .batch-row-fail td:first-child { border-left: 3px solid var(--red); }
+  .batch-row-warn td:first-child { border-left: 3px solid var(--amber); }
+  .batch-row-unused { opacity: 0.45; }
+  .batch-row-active { background: rgba(88,166,255,0.12) !important; }
+  .batch-row-active td:first-child { border-left-color: var(--blue) !important; }
+
+  .batch-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .batch-badge-ok { background: rgba(0,255,136,0.12); color: var(--green); }
+  .batch-badge-fail { background: rgba(255,68,68,0.12); color: var(--red); }
+  .batch-badge-warn { background: rgba(255,170,0,0.12); color: var(--amber); }
+
+  .batch-filter-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .batch-chip {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+
+  .batch-chip:hover { border-color: var(--text-dim); color: var(--text); }
+  .batch-chip.active { border-color: var(--accent); color: var(--text); background: rgba(56,139,253,0.15); }
+
+  .batch-scroll {
+    max-height: 280px;
+    overflow-y: auto;
+    overflow-x: auto;
+  }
+
+  .batch-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+  .batch-scroll::-webkit-scrollbar-track { background: transparent; }
+  .batch-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .batch-override { color: var(--amber); font-style: italic; cursor: pointer; }
+  .batch-override:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>PLANE ANGLE & Z-LIMIT CALCULATOR</h1>
+  <span class="subtitle">5-Axis CNC Plane Feasibility</span>
+</header>
+
+<div class="main-layout">
+  <div class="left-panel">
+
+    <!-- Inputs (Machine Settings + Plane Data + Feature Inputs) -->
+    <div class="section" id="sec-inputs">
+      <div class="section-header" onclick="toggleSection('sec-inputs')">
+        <h2>Inputs</h2>
+        <span class="toggle">&#9660;</span>
+      </div>
+      <div class="section-body">
+        <textarea id="in-plane" style="display:none"></textarea>
+        <div class="btn-row" style="align-items:center;margin-bottom:6px">
+          <span id="file-name" style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0" title="">No file loaded</span>
+          <button class="btn btn-secondary hidden" id="btn-refresh-file" onclick="refreshPlaneFile()" style="font-size:13px;padding:2px 6px;line-height:1" title="Reload file">&#x21bb;</button>
+          <button class="btn btn-secondary" onclick="pickPlaneFile()" style="font-size:10px;padding:3px 10px">LOAD FILE</button>
+        </div>
+        <div class="divider"></div>
+        <div class="field-row">
+          <label>Upper Z limit</label>
+          <input type="number" id="in-zlimit" value="980" step="1" min="0">
+          <span class="unit">mm</span>
+        </div>
+        <div class="field-row">
+          <label>Z axis travel</label>
+          <input type="number" id="in-ztravel" value="" step="1" placeholder="optional" min="0">
+          <span class="unit">mm</span>
+        </div>
+        <div class="field-row">
+          <label>Tool length (CoR to tip)</label>
+          <input type="number" id="in-toollen" value="" step="0.1" placeholder="required">
+          <span class="unit">mm</span>
+        </div>
+        <div class="field-row">
+          <label>Tool radius</label>
+          <input type="number" id="in-toolradius" value="" step="0.1" placeholder="optional" min="0">
+          <span class="unit">mm</span>
+        </div>
+        <div class="field-row">
+          <label>Machining ref</label>
+          <select id="in-machmode" style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:11px">
+            <option value="center">Tool center point</option>
+            <option value="radius">Tool radius (edge)</option>
+          </select>
+        </div>
+        <div class="divider"></div>
+        <div class="field-row">
+          <label>Z machining level</label>
+          <input type="number" id="in-zfeature" value="" step="0.1" placeholder="required" min="0">
+          <span class="unit">mm</span>
+        </div>
+        <div class="field-row">
+          <label>Part height</label>
+          <input type="number" id="in-partheight" value="" step="0.1" placeholder="optional" min="0">
+          <span class="unit">mm</span>
+        </div>
+        <div class="field-row">
+          <label>Clearance height</label>
+          <input type="number" id="in-clearanceheight" value="" step="0.1" placeholder="optional" min="0">
+          <span class="unit">mm</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Batch Results -->
+    <div class="section hidden" id="sec-batch">
+      <div class="section-header" onclick="toggleSection('sec-batch')">
+        <h2>Batch Results <span id="batch-count" style="color:var(--text);font-weight:400"></span></h2>
+        <span class="toggle">&#9660;</span>
+      </div>
+      <div class="section-body" style="padding:6px 8px;overflow:visible">
+        <div id="batch-filters" class="batch-filter-bar"></div>
+        <div class="batch-scroll">
+          <table class="batch-table">
+            <thead><tr>
+              <th>Name</th>
+              <th>A°</th>
+              <th>C°</th>
+              <th>Mach</th>
+              <th>Clr</th>
+              <th>C_min</th>
+            </tr></thead>
+            <tbody id="batch-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Z-Limit & Angle Analysis -->
+    <div class="section hidden" id="sec-analysis">
+      <div class="section-header" onclick="toggleSection('sec-analysis')">
+        <h2>Z-Limit & Angle Analysis</h2>
+        <span class="toggle">&#9660;</span>
+      </div>
+      <div class="section-body">
+        <div id="analysis-content"></div>
+      </div>
+    </div>
+
+    <!-- Parsed Plane Info (collapsed by default) -->
+    <div class="section hidden" id="sec-parsed">
+      <div class="section-header collapsed" onclick="toggleSection('sec-parsed')">
+        <h2>Parsed Plane</h2>
+        <span class="toggle">&#9660;</span>
+      </div>
+      <div class="section-body collapsed">
+        <div class="result-grid" id="parsed-grid"></div>
+      </div>
+    </div>
+
+    <!-- Adjusted Plane -->
+    <div class="section hidden" id="sec-adjusted">
+      <div class="section-header" onclick="toggleSection('sec-adjusted')">
+        <h2>Adjusted Plane</h2>
+        <button class="btn btn-secondary" id="btn-show-adj3d" onclick="toggleAdjusted3D(event)" style="font-size:9px;padding:2px 8px;margin-left:auto;margin-right:8px">SHOW 3D</button>
+        <span class="toggle">&#9660;</span>
+      </div>
+      <div class="section-body">
+        <div id="adjusted-info"></div>
+        <div class="matrix-output" id="adjusted-output">
+          <button class="copy-btn" onclick="copyAdjusted()">COPY</button>
+          <span id="adjusted-text"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error display -->
+    <div id="error-display" class="error-msg hidden"></div>
+
+  </div>
+
+  <div class="right-panel">
+    <canvas id="three-canvas"></canvas>
+    <!-- 3D scene labels rendered here -->
+    <div class="view-buttons">
+      <button onclick="setView('top')" title="Top view">Top</button>
+      <button onclick="setView('front')" title="Front view">Front</button>
+      <button onclick="setView('back')" title="Back view">Back</button>
+      <button onclick="setView('right')" title="Right view">Right</button>
+      <button onclick="setView('left')" title="Left view">Left</button>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ═══════════════════════════════════════════════════
+// GLOBALS
+// ═══════════════════════════════════════════════════
+let scene, camera, renderer, controls;
+let sceneLabels = [];
+let currentState = null; // last calculation result
+let hasFramedOnce = false; // only auto-frame camera on first calculation
+
+// Scene object groups
+let sceneObjects = {
+  table: null,
+  stone: null,
+  machiningPlane: null,
+  zLimitPlane: null,
+  zLowerLimitPlane: null,
+  toolOriginal: null,
+  toolAdjusted: null,
+  pivotOriginal: null,
+  pivotAdjusted: null,
+  azimuthRing: null,
+  cArcOriginal: null,
+  cArcAdjusted: null,
+  reachTool: null,
+};
+
+// ═══════════════════════════════════════════════════
+// PLANE TEXT PARSER
+// ═══════════════════════════════════════════════════
+function parsePlaneText(text) {
+  const lines = text.trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  let name = '';
+  let origin = null;
+  let matrix = [];
+
+  // Matches XYZ triplets in two formats:
+  //   Mastercam native: X-1394.84533465 Y-2078.02142852 Z0.
+  //   Colon-separated:  X: -1394.845  Y: -2078.021  Z: 0.0
+  // Handles trailing dot with no digits (e.g. "Z0.")
+  const xyzPattern = /X\s*:?\s*([+-]?\d+\.?\d*)\s+Y\s*:?\s*([+-]?\d+\.?\d*)\s+Z\s*:?\s*([+-]?\d+\.?\d*)/i;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Name
+    const nameMatch = line.match(/^Name\s*:\s*(.+)/i);
+    if (nameMatch) {
+      name = nameMatch[1].trim();
+      continue;
+    }
+
+    // Skip "Origin (view)" lines — only parse "Origin (world)"
+    if (line.match(/Origin\s*\(view\)/i)) continue;
+
+    // Origin (world)
+    if (line.match(/Origin\s*\(world\)/i)) {
+      const m = line.match(xyzPattern);
+      if (m) {
+        origin = [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])];
+      }
+      continue;
+    }
+
+    // Matrix rows — matches lines starting with "Matrix" or just ":"
+    // Format 1: "Matrix                : X0.696 Y0.717 Z0.001"
+    // Format 2: "                      : X-0.605 Y0.586 Z0.537"
+    // Format 3: "Matrix row 1: X: 1.0  Y: 0.0  Z: 0.0"
+    if (line.match(/^(?:Matrix|:|\s*:)/i) || line.match(/^(?:Matrix\s*)?(?:row\s*\d+)/i)) {
+      const m = line.match(xyzPattern);
+      if (m) {
+        matrix.push([parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])]);
+      }
+      continue;
+    }
+  }
+
+  if (!origin) throw new Error('Could not parse Origin (world) from plane text');
+  if (matrix.length < 3) throw new Error(`Found ${matrix.length} matrix rows, need 3`);
+
+  return { name, origin, matrix: matrix.slice(0, 3) };
+}
+
+// ═══════════════════════════════════════════════════
+// MULTI-PLANE PARSER
+// ═══════════════════════════════════════════════════
+function parseMultiplePlanes(text) {
+  // Split on dashed separator lines (4+ dashes)
+  const blocks = text.split(/^-{4,}$/m);
+  const planes = [];
+
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i].trim();
+    if (!block) continue;
+
+    try {
+      const plane = parsePlaneText(block);
+      // Detect *** NOT USED ***
+      const notUsed = /\*{3}\s*NOT USED\s*\*{3}/i.test(block);
+      planes.push({
+        ...plane,
+        used: !notUsed,
+        blockIndex: i,
+        rawBlock: block,
+      });
+    } catch (e) {
+      // Skip blocks that don't parse (header, etc.)
+    }
+  }
+
+  // Auto-name unnamed planes
+  planes.forEach((p, idx) => {
+    if (!p.name) p.name = `Plane ${idx + 1}`;
+  });
+
+  return planes;
+}
+
+// ═══════════════════════════════════════════════════
+// BATCH STATE
+// ═══════════════════════════════════════════════════
+let batchPlanes = [];    // parsed planes array
+let batchResults = [];   // per-plane calc results
+let batchActiveIdx = -1; // currently viewed plane index
+let planeOverrides = {}; // { index: { zFeature, zStone } }
+let batchFilter = 'all'; // 'all', 'problems', 'used'
+let batchRawText = '';   // original full batch text for re-calculation
+let showAdjusted3D = false; // toggle for adjusted vector in 3D scene
+
+// ═══════════════════════════════════════════════════
+// CORE MATH
+// ═══════════════════════════════════════════════════
+function extractAngles(normal) {
+  const [nx, ny, nz] = normal;
+  const C = Math.acos(Math.max(-1, Math.min(1, nz)));
+  const A = Math.atan2(ny, nx);
+  return { A, C };
+}
+
+function toDeg(rad) { return rad * 180 / Math.PI; }
+function toRad(deg) { return deg * Math.PI / 180; }
+
+// A display convention: A=0 is front (operator/-Y), A=90 is +X, A=-90 is -X
+function aDisplayDeg(A) {
+  let d = toDeg(A) + 90;
+  if (d > 180) d -= 360;
+  if (d < -180) d += 360;
+  return d;
+}
+
+function calcZPivot(zFeature, toolLen, C) {
+  return zFeature - toolLen * Math.cos(C);
+}
+
+function calcCMin(zRef, zLimit, toolLen) {
+  const ratio = (zRef - zLimit) / toolLen;
+  if (ratio >= 1) return null; // always OK, no tilt constraint
+  if (ratio <= -1) return Math.PI; // impossible
+  return Math.acos(ratio);
+}
+
+function reconstructMatrix(originalMatrix, newNormal) {
+  // Gram-Schmidt: project original X onto plane perpendicular to new normal
+  const origX = originalMatrix[0];
+  const n = newNormal;
+
+  // dot(origX, n)
+  const dot = origX[0]*n[0] + origX[1]*n[1] + origX[2]*n[2];
+
+  // newX = origX - dot * n
+  let newX = [origX[0] - dot*n[0], origX[1] - dot*n[1], origX[2] - dot*n[2]];
+  const lenX = Math.sqrt(newX[0]**2 + newX[1]**2 + newX[2]**2);
+
+  if (lenX < 1e-10) {
+    // Original X is parallel to new normal — use original Y instead
+    const origY = originalMatrix[1];
+    const dot2 = origY[0]*n[0] + origY[1]*n[1] + origY[2]*n[2];
+    newX = [origY[0] - dot2*n[0], origY[1] - dot2*n[1], origY[2] - dot2*n[2]];
+    const lenX2 = Math.sqrt(newX[0]**2 + newX[1]**2 + newX[2]**2);
+    newX = [newX[0]/lenX2, newX[1]/lenX2, newX[2]/lenX2];
+  } else {
+    newX = [newX[0]/lenX, newX[1]/lenX, newX[2]/lenX];
+  }
+
+  // newY = cross(n, newX)
+  const newY = [
+    n[1]*newX[2] - n[2]*newX[1],
+    n[2]*newX[0] - n[0]*newX[2],
+    n[0]*newX[1] - n[1]*newX[0]
+  ];
+
+  return [newX, newY, n];
+}
+
+function formatFloat(v, decimals = 8) {
+  const s = v.toFixed(decimals);
+  return v >= 0 ? s : s; // no padding — Mastercam uses sign-concatenated format
+}
+
+function formatPlaneText(name, origin, matrix) {
+  // Output in Mastercam native format: X-1394.84533465 Y-2078.02142852 Z0.
+  function fmtXYZ(row, decimals = 8) {
+    return `X${formatFloat(row[0], decimals)} Y${formatFloat(row[1], decimals)} Z${formatFloat(row[2], decimals)}`;
+  }
+  const pad = '                      ';
+  let out = '';
+  if (name) out += `Name                  : ${name}\n`;
+  out += `Origin (world)        : ${fmtXYZ(origin)}\n`;
+  out += `Matrix                : ${fmtXYZ(matrix[0])}\n`;
+  out += `${pad}: ${fmtXYZ(matrix[1])}\n`;
+  out += `${pad}: ${fmtXYZ(matrix[2])}`;
+  return out;
+}
+
+// ═══════════════════════════════════════════════════
+// MAIN CALCULATION
+// ═══════════════════════════════════════════════════
+window.calculate = function() {
+  const errEl = document.getElementById('error-display');
+  errEl.classList.add('hidden');
+  errEl.textContent = '';
+
+  try {
+    // Read inputs
+    const zLimit = -Math.abs(parseFloat(document.getElementById('in-zlimit').value));
+    const toolLen = parseFloat(document.getElementById('in-toollen').value);
+    const planeText = document.getElementById('in-plane').value;
+    const zFeature = -Math.abs(parseFloat(document.getElementById('in-zfeature').value));
+    const zTravelVal = document.getElementById('in-ztravel').value;
+    const zTravel = zTravelVal ? parseFloat(zTravelVal) : null;
+    const zLowerLimit = (zTravel !== null) ? zLimit + zTravel : null; // e.g. -980 + 700 = -280
+    const toolRadiusVal = document.getElementById('in-toolradius').value;
+    const toolRadius = toolRadiusVal ? parseFloat(toolRadiusVal) : 0;
+    const machMode = document.getElementById('in-machmode').value; // 'center' or 'radius'
+    const partHeightVal = document.getElementById('in-partheight').value;
+    const clearanceHeightVal = document.getElementById('in-clearanceheight').value;
+    if (isNaN(toolLen) || toolLen <= 0) throw new Error('Tool length is required and must be > 0');
+    if (isNaN(zLimit)) throw new Error('Z limit is required');
+    if (!planeText.trim()) throw new Error('Paste Mastercam plane data');
+    if (isNaN(zFeature)) throw new Error('Z machining level is required');
+
+    // Auto-detect batch mode: if dashed separators exist, try multi-plane parse
+    if (/^-{4,}$/m.test(planeText) && batchActiveIdx < 0) {
+      const planes = parseMultiplePlanes(planeText);
+      if (planes.length >= 2) {
+        batchPlanes = planes;
+        batchRawText = planeText;
+        batchActiveIdx = -1;
+        calculateBatch();
+        saveSettings();
+        collapseInputSections();
+        return;
+      }
+    }
+
+    // Clearance level = -(partHeight + clearanceHeight), only if both are provided
+    const partHeight = partHeightVal ? parseFloat(partHeightVal) : null;
+    const clearanceHeight = clearanceHeightVal ? parseFloat(clearanceHeightVal) : null;
+    const zStone = (partHeight !== null && clearanceHeight !== null) ? -(partHeight + clearanceHeight) : null;
+    // Parse plane
+    const plane = parsePlaneText(planeText);
+    const normal = plane.matrix[2];
+    const { A, C } = extractAngles(normal);
+
+    // Show parsed info
+    showParsed(plane, A, C);
+
+    // Tool disk extends toolRadius perpendicular to shaft. When tilted at C,
+    // the lowest edge is toolRadius * sin(C) below the tool center.
+    const radiusOffset = toolRadius * Math.sin(C);
+
+    // Z limit analysis — two separate checks
+    // 1) Feature check: can we machine at this angle at the feature Z?
+    //    In radius mode: machining level = disk edge contact, center is above → apply offset
+    //    In center mode: machining level = tool center → no offset
+    const useRadiusMode = (machMode === 'radius');
+    const zFeatureEff = useRadiusMode ? zFeature - radiusOffset : zFeature;
+    const zPivotFeature = calcZPivot(zFeatureEff, toolLen, C);
+    const featureOk = zPivotFeature >= zLimit;
+
+    // 2) Part clearance check: can we link/rapid over the top of the stone?
+    const zStoneEff = (zStone !== null) ? zStone - radiusOffset : null;
+    const zPivotStone = (zStoneEff !== null) ? calcZPivot(zStoneEff, toolLen, C) : null;
+    const stoneOk = (zPivotStone !== null) ? zPivotStone >= zLimit : null;
+
+    // 3) Reachability check: can the CoR descend far enough to reach the feature?
+    //    CoR must be at or above (more negative than) zLowerLimit
+    const reachable = (zLowerLimit !== null) ? zPivotFeature <= zLowerLimit : null;
+
+    // Overall status
+    const isOk = featureOk && (stoneOk === null || stoneOk) && (reachable === null || reachable);
+
+    // C_min for each constraint (use full radius for conservative C_min estimate)
+    const cMinFeatureRef = useRadiusMode ? zFeature - toolRadius : zFeature;
+    const cMinFeature = calcCMin(cMinFeatureRef, zLimit, toolLen);
+    const cMinStone = (zStone !== null) ? calcCMin(zStone - toolRadius, zLimit, toolLen) : null;
+    // C_max for reachability: above this C, CoR can't reach low enough
+    const cMaxReach = (zLowerLimit !== null) ? calcCMin(cMinFeatureRef, zLowerLimit, toolLen) : null;
+
+    // Binding constraint (whichever gives larger C_min)
+    let cMinBinding = null;
+    let bindingSource = '';
+    if (cMinFeature !== null && cMinStone !== null) {
+      if (cMinStone > cMinFeature) {
+        cMinBinding = cMinStone;
+        bindingSource = 'clearance level';
+      } else {
+        cMinBinding = cMinFeature;
+        bindingSource = 'machining level';
+      }
+    } else if (cMinFeature !== null) {
+      cMinBinding = cMinFeature;
+      bindingSource = 'machining level';
+    } else if (cMinStone !== null) {
+      cMinBinding = cMinStone;
+      bindingSource = 'clearance level';
+    }
+
+    showAnalysis({
+      zLimit, C,
+      zPivotFeature, featureOk, cMinFeature,
+      zPivotStone, stoneOk, cMinStone,
+      cMinBinding, bindingSource,
+      zLowerLimit, reachable, cMaxReach,
+    });
+
+    // Adjusted plane — only when current angle doesn't clear limits
+    let adjustedData = null;
+    if (!isOk && cMinBinding !== null) {
+      let targetC = cMinBinding;
+
+      // Ensure target C is at least C_min
+      if (cMinBinding !== null && targetC < cMinBinding) {
+        targetC = cMinBinding;
+      }
+
+      targetC = Math.max(0, Math.min(Math.PI / 2, targetC));
+
+      const newNormal = [
+        Math.sin(targetC) * Math.cos(A),
+        Math.sin(targetC) * Math.sin(A),
+        Math.cos(targetC)
+      ];
+      const newMatrix = reconstructMatrix(plane.matrix, newNormal);
+      const newRadiusOffset = toolRadius * Math.sin(targetC);
+      const newZFeatureEff = useRadiusMode ? zFeature - newRadiusOffset : zFeature;
+      const newZPivotFeature = calcZPivot(newZFeatureEff, toolLen, targetC);
+      const newFeatureOk = newZPivotFeature >= zLimit;
+      const newZStoneEff = (zStone !== null) ? zStone - newRadiusOffset : null;
+      const newZPivotStone = (newZStoneEff !== null) ? calcZPivot(newZStoneEff, toolLen, targetC) : null;
+      const newStoneOk = (newZPivotStone !== null) ? newZPivotStone >= zLimit : null;
+      const newReachable = (zLowerLimit !== null) ? newZPivotFeature <= zLowerLimit : null;
+
+      adjustedData = {
+        C: targetC,
+        A: A,
+        normal: newNormal,
+        matrix: newMatrix,
+        origin: plane.origin,
+        name: plane.name ? plane.name + ' (adjusted)' : 'Adjusted',
+        zPivotFeature: newZPivotFeature,
+        featureOk: newFeatureOk,
+        zPivotStone: newZPivotStone,
+        stoneOk: newStoneOk,
+        reachable: newReachable,
+        isOk: newFeatureOk && (newStoneOk === null || newStoneOk) && (newReachable === null || newReachable),
+      };
+
+      showAdjusted(adjustedData, C);
+    } else {
+      document.getElementById('sec-adjusted').classList.add('hidden');
+    }
+
+    // Save state for 3D
+    currentState = {
+      plane, A, C, zFeature, zLimit, toolLen, toolRadius, machMode, zStone, partHeight,
+      zPivotFeature, featureOk, zPivotStone, stoneOk,
+      zLowerLimit, reachable, cMaxReach,
+      isOk, cMinBinding, adjusted: adjustedData
+    };
+
+    updateScene();
+    saveSettings();
+
+    // If viewing a single plane from batch, re-sync the batch table with current settings
+    if (batchPlanes.length >= 2 && batchActiveIdx >= 0) {
+      calculateBatch();
+    }
+
+    // Auto-collapse input sections after successful calculation
+    collapseInputSections();
+
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  }
+};
+
+// ═══════════════════════════════════════════════════
+// UI DISPLAY FUNCTIONS
+// ═══════════════════════════════════════════════════
+function showParsed(plane, A, C) {
+  const sec = document.getElementById('sec-parsed');
+  sec.classList.remove('hidden');
+  // Keep collapsed state if already set, default to collapsed on first show
+  const header = sec.querySelector('.section-header');
+  const body = sec.querySelector('.section-body');
+  if (!sec.dataset.shown) {
+    header.classList.add('collapsed');
+    body.classList.add('collapsed');
+    sec.dataset.shown = '1';
+  }
+  const grid = document.getElementById('parsed-grid');
+  const n = plane.matrix[2];
+
+  grid.innerHTML = `
+    <span class="lbl">Name:</span><span class="val">${plane.name || '(unnamed)'}</span>
+    <span class="lbl">Origin:</span><span class="val">${plane.origin.map(v => v.toFixed(4)).join(', ')}</span>
+    <span class="lbl">Normal (row 3):</span><span class="val">${n.map(v => v.toFixed(6)).join(', ')}</span>
+    <span class="lbl">C (tilt):</span><span class="val">${toDeg(C).toFixed(2)}&deg;</span>
+    <span class="lbl">A (azimuth):</span><span class="val">${aDisplayDeg(A).toFixed(2)}&deg;</span>
+  `;
+}
+
+function showAnalysis(a) {
+  const sec = document.getElementById('sec-analysis');
+  sec.classList.remove('hidden');
+  const el = document.getElementById('analysis-content');
+
+  const currentC = toDeg(a.C);
+  const cAxisMax = 90;
+  const cMinFeatureDeg = a.cMinFeature !== null ? toDeg(a.cMinFeature) : null;
+  const cMinStoneDeg = a.cMinStone !== null ? toDeg(a.cMinStone) : null;
+  const cMinDeg = a.cMinBinding !== null ? toDeg(a.cMinBinding) : null;
+  const cMaxReachDeg = a.cMaxReach !== null ? toDeg(a.cMaxReach) : null;
+  const rangeMin = cMinDeg !== null ? cMinDeg : 0;
+  const rangeMax = cMaxReachDeg !== null ? Math.min(cMaxReachDeg, cAxisMax) : cAxisMax;
+  const marginToZLimit = cMinDeg !== null ? (currentC - cMinDeg) : null;
+  const marginToCAxis = cAxisMax - currentC;
+  const marginToReach = cMaxReachDeg !== null ? (cMaxReachDeg - currentC) : null;
+
+  // Helper for a single Z-check block
+  function checkBlock(label, zPivot, ok, cMin) {
+    const margin = zPivot - a.zLimit;
+    const statusClass = ok ? 'status-ok' : 'status-fail';
+    const statusText = ok ? 'OK' : 'OVER LIMIT';
+    const colorName = ok ? (margin < 20 ? 'amber' : 'green') : 'red';
+    let h = `<div style="margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">${label}</div>`;
+    h += `<div class="result-grid">
+      <span class="lbl">Z CoR:</span><span class="val">${Math.abs(zPivot).toFixed(2)} mm</span>
+      <span class="lbl">Margin:</span><span class="val color-${colorName}">${margin.toFixed(2)} mm</span>
+      <span class="lbl">Status:</span><span class="val"><span class="status-badge ${statusClass}">${statusText}</span></span>`;
+    if (cMin !== null) {
+      const delta = currentC - toDeg(cMin);
+      const dClass = delta > 5 ? 'color-green' : (delta >= 0 ? 'color-amber' : 'color-red');
+      h += `<span class="lbl">C_min:</span><span class="val">${toDeg(cMin).toFixed(2)}&deg; <span class="${dClass}">(${delta >= 0 ? '+' : ''}${delta.toFixed(2)}&deg;)</span></span>`;
+    }
+    h += `</div>`;
+    return h;
+  }
+
+  let html = '';
+
+  // Current angle summary
+  html += `<div class="result-grid">
+    <span class="lbl">Current C:</span><span class="val">${currentC.toFixed(2)}&deg;</span>
+    <span class="lbl">Upper Z limit:</span><span class="val">${Math.abs(a.zLimit).toFixed(2)} mm</span>`;
+  if (a.zLowerLimit !== null) {
+    html += `<span class="lbl">Lower Z limit:</span><span class="val">${Math.abs(a.zLowerLimit).toFixed(2)} mm</span>`;
+  }
+  html += `</div>`;
+
+  html += `<div class="divider"></div>`;
+
+  // Machining level clearance
+  html += checkBlock('Machining Level', a.zPivotFeature, a.featureOk, a.cMinFeature);
+
+  // Clearance level
+  if (a.zPivotStone !== null) {
+    html += `<div class="divider"></div>`;
+    html += checkBlock('Clearance Level', a.zPivotStone, a.stoneOk, a.cMinStone);
+    if (!a.stoneOk && a.featureOk) {
+      html += `<div class="inline-note" style="color:var(--amber)">Machining OK but cannot clear at linking height — route around outside of part</div>`;
+    }
+  }
+
+  // Reachability
+  if (a.zLowerLimit !== null) {
+    html += `<div class="divider"></div>`;
+    const reachMarginMm = a.zLowerLimit - a.zPivotFeature; // positive = reachable (CoR is above lower limit)
+    const reachOk = a.reachable;
+    const reachStatusClass = reachOk ? 'status-ok' : 'status-fail';
+    const reachStatusText = reachOk ? 'OK' : 'UNREACHABLE';
+    const reachColor = reachOk ? (reachMarginMm < 20 ? 'amber' : 'green') : 'red';
+    html += `<div style="margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">Reachability</div>`;
+    html += `<div class="result-grid">
+      <span class="lbl">Lower limit:</span><span class="val">${Math.abs(a.zLowerLimit).toFixed(2)} mm</span>
+      <span class="lbl">Margin:</span><span class="val color-${reachColor}">${reachMarginMm.toFixed(2)} mm</span>
+      <span class="lbl">Status:</span><span class="val"><span class="status-badge ${reachStatusClass}">${reachStatusText}</span></span>`;
+    if (cMaxReachDeg !== null) {
+      const delta = cMaxReachDeg - currentC;
+      const dClass = delta > 5 ? 'color-green' : (delta >= 0 ? 'color-amber' : 'color-red');
+      html += `<span class="lbl">C_max reach:</span><span class="val">${cMaxReachDeg.toFixed(2)}&deg; <span class="${dClass}">(${delta >= 0 ? '+' : ''}${delta.toFixed(2)}&deg;)</span></span>`;
+    }
+    html += `</div>`;
+    if (!reachOk) {
+      html += `<div class="inline-note" style="color:var(--red)">CoR cannot descend far enough — tool cannot reach machining level at this C angle</div>`;
+    }
+  }
+
+  html += `<div class="divider"></div>`;
+
+  // Margins from current angle
+  html += `<div style="margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">Angle Margins</div>`;
+  html += `<div class="result-grid">`;
+  if (marginToZLimit !== null) {
+    const zlClass = marginToZLimit > 5 ? 'color-green' : (marginToZLimit >= 0 ? 'color-amber' : 'color-red');
+    const zlStatus = marginToZLimit < 0 ? ' (OVER LIMIT)' : (marginToZLimit < 5 ? ' (tight)' : '');
+    html += `<span class="lbl">To C_min (${a.bindingSource}):</span><span class="val ${zlClass}">${marginToZLimit >= 0 ? '+' : ''}${marginToZLimit.toFixed(2)}&deg;${zlStatus}</span>`;
+  }
+  if (marginToReach !== null) {
+    const rClass = marginToReach > 5 ? 'color-green' : (marginToReach >= 0 ? 'color-amber' : 'color-red');
+    const rStatus = marginToReach < 0 ? ' (UNREACHABLE)' : (marginToReach < 5 ? ' (tight)' : '');
+    html += `<span class="lbl">To C_max (reach):</span><span class="val ${rClass}">${marginToReach >= 0 ? '+' : ''}${marginToReach.toFixed(2)}&deg;${rStatus}</span>`;
+  }
+  const cClass = marginToCAxis > 5 ? 'color-green' : (marginToCAxis >= 0 ? 'color-amber' : 'color-red');
+  const cStatus = marginToCAxis < 5 ? ' (tight)' : '';
+  html += `<span class="lbl">To C axis max (90&deg;):</span><span class="val ${cClass}">${marginToCAxis.toFixed(2)}&deg;${cStatus}</span>`;
+  html += `<span class="lbl">Usable range:</span><span class="val">${rangeMin.toFixed(1)}&deg; &ndash; ${rangeMax.toFixed(1)}&deg; (${(rangeMax - rangeMin).toFixed(1)}&deg;)</span>`;
+  html += `</div>`;
+
+  // Visual angle bar
+  html += buildAngleBar(currentC, rangeMin, rangeMax, cMinFeatureDeg, cMinStoneDeg, cMaxReachDeg);
+
+  el.innerHTML = html;
+}
+
+function buildAngleBar(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach) {
+  // Visual bar: 0° to 90° with markers
+  const barWidth = 100; // percent
+  const pos = (v) => ((v / 90) * barWidth).toFixed(1);
+
+  let html = `<div style="position:relative;height:40px;margin:8px 0 4px 0">`;
+  // Background bar (full 0-90 range)
+  html += `<div style="position:absolute;top:14px;left:0;right:0;height:6px;background:var(--border);border-radius:3px"></div>`;
+  // Usable range highlight
+  html += `<div style="position:absolute;top:14px;left:${pos(cMin)}%;right:${(100 - parseFloat(pos(cMax))).toFixed(1)}%;height:6px;background:rgba(0,255,136,0.25);border-radius:3px"></div>`;
+
+  // C_min marker(s)
+  if (cMinFeature !== null && cMinStone !== null && Math.abs(cMinFeature - cMinStone) > 0.5) {
+    // Show both markers if they're distinct
+    const lesser = Math.min(cMinFeature, cMinStone);
+    const lesserLabel = cMinFeature < cMinStone ? 'M' : 'C';
+    html += `<div style="position:absolute;top:10px;left:${pos(lesser)}%;width:1px;height:14px;background:var(--amber);opacity:0.5"></div>`;
+    html += `<div style="position:absolute;top:26px;left:${pos(lesser)}%;font-size:8px;color:var(--amber);opacity:0.6;transform:translateX(-50%)">${lesserLabel}</div>`;
+  }
+  if (cMin > 0) {
+    html += `<div style="position:absolute;top:10px;left:${pos(cMin)}%;width:2px;height:14px;background:var(--red)"></div>`;
+    html += `<div style="position:absolute;top:26px;left:${pos(cMin)}%;font-size:8px;color:var(--red);transform:translateX(-50%)">C_min</div>`;
+  }
+
+  // C_max reach marker (orange) — ceiling from reachability
+  if (cMaxReach !== null && cMaxReach < 90) {
+    html += `<div style="position:absolute;top:10px;left:${pos(cMaxReach)}%;width:2px;height:14px;background:var(--amber)"></div>`;
+    html += `<div style="position:absolute;top:26px;left:${pos(cMaxReach)}%;font-size:8px;color:var(--amber);transform:translateX(-50%)">C_max</div>`;
+  }
+
+  // Current angle marker
+  const curColor = (currentC >= cMin && currentC <= cMax) ? 'var(--green)' : 'var(--red)';
+  html += `<div style="position:absolute;top:6px;left:${pos(currentC)}%;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid ${curColor};transform:translateX(-5px)"></div>`;
+  html += `<div style="position:absolute;top:0px;left:${pos(currentC)}%;font-size:8px;color:${curColor};transform:translateX(-50%);white-space:nowrap">${currentC.toFixed(1)}&deg;</div>`;
+
+  // 90° marker
+  html += `<div style="position:absolute;top:10px;right:0;width:2px;height:14px;background:var(--amber)"></div>`;
+  html += `<div style="position:absolute;top:26px;right:0;font-size:8px;color:var(--amber);transform:translateX(50%)">90&deg;</div>`;
+
+  // 0° label
+  html += `<div style="position:absolute;top:26px;left:0;font-size:8px;color:var(--text-dim)">0&deg;</div>`;
+
+  html += `</div>`;
+  return html;
+}
+
+function showAdjusted(adj, originalC) {
+  const sec = document.getElementById('sec-adjusted');
+  sec.classList.remove('hidden');
+  // Start collapsed by default
+  const header = sec.querySelector('.section-header');
+  const body = sec.querySelector('.section-body');
+  if (!header.classList.contains('collapsed')) {
+    header.classList.add('collapsed');
+    body.classList.add('collapsed');
+  }
+  const info = document.getElementById('adjusted-info');
+  const textEl = document.getElementById('adjusted-text');
+
+  const deltaC = toDeg(adj.C) - toDeg(originalC);
+  const featureStatusClass = adj.featureOk ? 'status-ok' : 'status-fail';
+  const featureStatusText = adj.featureOk ? 'OK' : 'OVER LIMIT';
+
+  let html = `
+    <div class="result-grid">
+      <span class="lbl">New C:</span><span class="val">${toDeg(adj.C).toFixed(2)}&deg;</span>
+      <span class="lbl">A (unchanged):</span><span class="val">${toDeg(adj.A).toFixed(2)}&deg;</span>
+      <span class="lbl">&Delta;C:</span><span class="val">${deltaC >= 0 ? '+' : ''}${deltaC.toFixed(2)}&deg;</span>
+    </div>
+    <div class="divider"></div>
+    <div class="result-grid">
+      <span class="lbl">Machining CoR:</span><span class="val">${Math.abs(adj.zPivotFeature).toFixed(2)} mm</span>
+      <span class="lbl">Machining level:</span><span class="val"><span class="status-badge ${featureStatusClass}">${featureStatusText}</span></span>
+    </div>`;
+
+  if (adj.zPivotStone !== null) {
+    const stoneStatusClass = adj.stoneOk ? 'status-ok' : 'status-fail';
+    const stoneStatusText = adj.stoneOk ? 'OK' : 'OVER LIMIT';
+    html += `<div class="result-grid" style="margin-top:4px">
+      <span class="lbl">Clearance CoR:</span><span class="val">${Math.abs(adj.zPivotStone).toFixed(2)} mm</span>
+      <span class="lbl">Clearance level:</span><span class="val"><span class="status-badge ${stoneStatusClass}">${stoneStatusText}</span></span>
+    </div>`;
+
+    if (!adj.stoneOk && adj.featureOk) {
+      html += `<div class="inline-note" style="color:var(--amber)">Can machine but must link around outside of part</div>`;
+    }
+  }
+
+  if (adj.reachable === false) {
+    html += `<div class="result-grid" style="margin-top:4px">
+      <span class="lbl">Reachability:</span><span class="val"><span class="status-badge status-fail">UNREACHABLE</span></span>
+    </div>`;
+  }
+
+  html += `<div class="divider"></div>`;
+  info.innerHTML = html;
+
+  textEl.textContent = formatPlaneText(adj.name, adj.origin, adj.matrix);
+}
+
+window.clearPlaneData = function() {
+  document.getElementById('in-plane').value = '';
+  batchPlanes = [];
+  batchResults = [];
+  batchActiveIdx = -1;
+  batchRawText = '';
+  planeOverrides = {};
+  fileHandle = null;
+  showFileName('');
+  clearFileHandle();
+  document.getElementById('sec-batch').classList.add('hidden');
+  saveSettings();
+};
+
+// ═══════════════════════════════════════════════════
+// FILE LOADING (File System Access API + IndexedDB persistence)
+// ═══════════════════════════════════════════════════
+let fileHandle = null;   // FileSystemFileHandle for current file
+let lastDirHandle = null; // remember last directory for file picker
+
+function showFileName(name) {
+  const el = document.getElementById('file-name');
+  el.textContent = name || 'No file loaded';
+  el.title = name || '';
+  document.getElementById('btn-refresh-file').classList.toggle('hidden', !name);
+}
+
+async function readFileHandle(handle) {
+  const perm = await handle.queryPermission({ mode: 'read' });
+  if (perm !== 'granted') {
+    const req = await handle.requestPermission({ mode: 'read' });
+    if (req !== 'granted') return null;
+  }
+  const file = await handle.getFile();
+  return await file.text();
+}
+
+// IndexedDB helpers for persisting the file handle across sessions
+function openHandleDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('planeCalcFiles', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('handles');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveFileHandle(handle) {
+  try {
+    const db = await openHandleDB();
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(handle, 'lastFile');
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+  } catch (e) {}
+}
+
+async function loadFileHandle() {
+  try {
+    const db = await openHandleDB();
+    const tx = db.transaction('handles', 'readonly');
+    const req = tx.objectStore('handles').get('lastFile');
+    return await new Promise((res, rej) => { req.onsuccess = () => res(req.result); req.onerror = rej; });
+  } catch (e) { return null; }
+}
+
+async function clearFileHandle() {
+  try {
+    const db = await openHandleDB();
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').delete('lastFile');
+  } catch (e) {}
+}
+
+window.pickPlaneFile = async function() {
+  try {
+    const opts = {
+      types: [{ description: 'Text files', accept: { 'text/plain': ['.txt', '.text'] } }],
+      multiple: false,
+    };
+    // Start in last-used directory if available
+    if (lastDirHandle) opts.startIn = lastDirHandle;
+    const [handle] = await window.showOpenFilePicker(opts);
+    fileHandle = handle;
+    hasFramedOnce = false; // re-frame camera for new file
+    // Save the directory for next time
+    try {
+      lastDirHandle = await handle.getParent?.() || null;
+    } catch(e) { /* getParent not supported in all browsers */ }
+    const text = await readFileHandle(handle);
+    if (text !== null) {
+      document.getElementById('in-plane').value = text;
+      showFileName(handle.name);
+      saveSettings();
+      await saveFileHandle(handle);
+      calculate();
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') console.error('File pick error:', e);
+  }
+};
+
+window.refreshPlaneFile = async function() {
+  if (!fileHandle) return;
+  try {
+    const text = await readFileHandle(fileHandle);
+    if (text !== null) {
+      document.getElementById('in-plane').value = text;
+      saveSettings();
+      calculate();
+      // Flash the refresh button briefly
+      const btn = document.getElementById('btn-refresh-file');
+      btn.style.borderColor = 'var(--green)';
+      btn.style.color = 'var(--green)';
+      setTimeout(() => { btn.style.borderColor = ''; btn.style.color = ''; }, 400);
+    }
+  } catch (e) {
+    console.error('Refresh error:', e);
+    showFileName('');
+    fileHandle = null;
+  }
+};
+
+// ═══════════════════════════════════════════════════
+// BATCH CALCULATION
+// ═══════════════════════════════════════════════════
+function calculateBatch() {
+  const zLimit = -Math.abs(parseFloat(document.getElementById('in-zlimit').value));
+  const toolLen = parseFloat(document.getElementById('in-toollen').value);
+  const globalZFeature = -Math.abs(parseFloat(document.getElementById('in-zfeature').value));
+  const partHeightVal = document.getElementById('in-partheight').value;
+  const clearanceHeightVal = document.getElementById('in-clearanceheight').value;
+  const partHeight = partHeightVal ? parseFloat(partHeightVal) : null;
+  const clearanceHeight = clearanceHeightVal ? parseFloat(clearanceHeightVal) : null;
+  const globalZStone = (partHeight !== null && clearanceHeight !== null) ? -(partHeight + clearanceHeight) : null;
+  const toolRadiusVal = document.getElementById('in-toolradius').value;
+  const toolRadius = toolRadiusVal ? parseFloat(toolRadiusVal) : 0;
+  const machMode = document.getElementById('in-machmode').value;
+  const useRadiusMode = (machMode === 'radius');
+  const zTravelVal = document.getElementById('in-ztravel').value;
+  const zTravel = zTravelVal ? parseFloat(zTravelVal) : null;
+  const zLowerLimit = (zTravel !== null) ? zLimit + zTravel : null;
+
+  if (isNaN(toolLen) || toolLen <= 0 || isNaN(zLimit) || isNaN(globalZFeature)) return;
+
+  batchResults = batchPlanes.map((plane, idx) => {
+    const override = planeOverrides[idx] || {};
+    const zFeature = override.zFeature !== undefined ? override.zFeature : globalZFeature;
+    const zStone = override.zStone !== undefined ? override.zStone : globalZStone;
+
+    const normal = plane.matrix[2];
+    const { A, C } = extractAngles(normal);
+    const radiusOffset = toolRadius * Math.sin(C);
+    const zFeatureEff = useRadiusMode ? zFeature - radiusOffset : zFeature;
+    const zPivotFeature = calcZPivot(zFeatureEff, toolLen, C);
+    const featureOk = zPivotFeature >= zLimit;
+    const featureMargin = zPivotFeature - zLimit;
+
+    const zStoneEff = (zStone !== null) ? zStone - radiusOffset : null;
+    const zPivotStone = (zStoneEff !== null) ? calcZPivot(zStoneEff, toolLen, C) : null;
+    const stoneOk = (zPivotStone !== null) ? zPivotStone >= zLimit : null;
+    const stoneMargin = (zPivotStone !== null) ? zPivotStone - zLimit : null;
+
+    // Reachability: can the CoR descend far enough?
+    const reachable = (zLowerLimit !== null) ? zPivotFeature <= zLowerLimit : null;
+
+    const cMinFeatureRef = useRadiusMode ? zFeature - toolRadius : zFeature;
+    const cMinFeature = calcCMin(cMinFeatureRef, zLimit, toolLen);
+    const cMinStone = (zStone !== null) ? calcCMin(zStone - toolRadius, zLimit, toolLen) : null;
+    const cMaxReach = (zLowerLimit !== null) ? calcCMin(cMinFeatureRef, zLowerLimit, toolLen) : null;
+
+    let cMinBinding = null;
+    if (cMinFeature !== null && cMinStone !== null) {
+      cMinBinding = Math.max(cMinFeature, cMinStone);
+    } else if (cMinFeature !== null) {
+      cMinBinding = cMinFeature;
+    } else if (cMinStone !== null) {
+      cMinBinding = cMinStone;
+    }
+
+    // Angle margin to C_min
+    const cDeg = toDeg(C);
+    const cMinDeg = cMinBinding !== null ? toDeg(cMinBinding) : null;
+    const angleMargin = cMinDeg !== null ? (cDeg - cMinDeg) : null;
+
+    // Angle margin to C_max (reachability ceiling)
+    const cMaxDeg = cMaxReach !== null ? toDeg(cMaxReach) : null;
+    const reachMargin = cMaxDeg !== null ? (cMaxDeg - cDeg) : null;
+
+    // Status logic:
+    // FAIL = machining level exceeds Z limit OR unreachable
+    // WARN (clearance) = machining OK but clearance level doesn't clear
+    // WARN (tight) = everything clears but margins are close
+    // OK = comfortable clearance
+    let status, statusNote = '';
+    if (!featureOk) {
+      status = 'fail';
+      statusNote = 'machining level exceeds Z limit';
+    } else if (reachable === false) {
+      status = 'fail';
+      statusNote = 'CoR cannot reach';
+    } else if (stoneOk === false) {
+      status = 'warn';
+      statusNote = 'clearance level';
+    } else if (featureMargin < 20 || (stoneMargin !== null && stoneMargin < 20) ||
+               (angleMargin !== null && angleMargin >= 0 && angleMargin < 5) ||
+               (reachMargin !== null && reachMargin >= 0 && reachMargin < 5)) {
+      status = 'warn';
+      statusNote = 'tight margins';
+    } else {
+      status = 'ok';
+    }
+
+    return {
+      plane, A, C, zFeature, zStone,
+      featureOk, stoneOk, reachable,
+      featureMargin, stoneMargin, cMinBinding, cMaxReach,
+      angleMargin, reachMargin,
+      status, statusNote, hasOverride: !!planeOverrides[idx],
+    };
+  });
+
+  renderBatchTable();
+
+  // Hide single-plane detail sections in batch overview mode
+  if (batchActiveIdx < 0) {
+    hideDetailSections();
+  }
+}
+
+function hideDetailSections() {
+  ['sec-parsed', 'sec-analysis', 'sec-adjusted'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+}
+
+function renderBatchTable() {
+  const sec = document.getElementById('sec-batch');
+  sec.classList.remove('hidden');
+  const tbody = document.getElementById('batch-tbody');
+
+  // Counts
+  const failCount = batchResults.filter(r => r.status === 'fail').length;
+  const warnCount = batchResults.filter(r => r.status === 'warn').length;
+  const okCount = batchResults.filter(r => r.status === 'ok').length;
+  const usedCount = batchPlanes.filter(p => p.used).length;
+  const total = batchResults.length;
+
+  document.getElementById('batch-count').innerHTML =
+    `(${total} planes${failCount ? `, <span style="color:var(--red)">${failCount} fail</span>` : ''}${warnCount ? `, <span style="color:var(--amber)">${warnCount} warn</span>` : ''})`;
+
+  // Filter bar
+  const filtersEl = document.getElementById('batch-filters');
+  filtersEl.innerHTML = `
+    <button class="batch-chip ${batchFilter === 'all' ? 'active' : ''}" onclick="setBatchFilter('all')">All (${total})</button>
+    ${failCount > 0 ? `<button class="batch-chip ${batchFilter === 'fail' ? 'active' : ''}" onclick="setBatchFilter('fail')" style="color:var(--red)">Fail (${failCount})</button>` : ''}
+    ${warnCount > 0 ? `<button class="batch-chip ${batchFilter === 'warn' ? 'active' : ''}" onclick="setBatchFilter('warn')" style="color:var(--amber)">Warn (${warnCount})</button>` : ''}
+    <button class="batch-chip ${batchFilter === 'used' ? 'active' : ''}" onclick="setBatchFilter('used')">Used (${usedCount})</button>
+  `;
+
+  // Sort: fail first, then warn, then ok
+  const sortOrder = { fail: 0, warn: 1, ok: 2 };
+  const indexed = batchResults.map((r, i) => ({ ...r, idx: i }));
+  indexed.sort((a, b) => sortOrder[a.status] - sortOrder[b.status]);
+
+  // Filter
+  const filtered = indexed.filter(r => {
+    if (batchFilter === 'fail') return r.status === 'fail';
+    if (batchFilter === 'warn') return r.status === 'warn';
+    if (batchFilter === 'used') return batchPlanes[r.idx].used;
+    return true;
+  });
+
+  tbody.innerHTML = '';
+  filtered.forEach(r => {
+    const p = batchPlanes[r.idx];
+    const rowClass = `batch-row-${r.status}` +
+      (p.used ? '' : ' batch-row-unused') +
+      (r.idx === batchActiveIdx ? ' batch-row-active' : '');
+
+    const aDeg = aDisplayDeg(r.A).toFixed(1);
+    const cDeg = toDeg(r.C).toFixed(1);
+    const cMin = r.cMinBinding !== null ? toDeg(r.cMinBinding).toFixed(1) + '°' : '—';
+
+    // Machining level status: margin value colored by threshold
+    const fMargin = r.featureMargin.toFixed(1);
+    const fColor = r.featureMargin < 0 ? 'var(--red)' : (r.featureMargin < 20 ? 'var(--amber)' : 'var(--green)');
+
+    // Clearance level status: margin value or "—"
+    const sMargin = r.stoneMargin !== null ? r.stoneMargin.toFixed(1) : '—';
+    const sColor = r.stoneMargin === null ? '' : (r.stoneMargin < 0 ? 'var(--red)' : (r.stoneMargin < 20 ? 'var(--amber)' : 'var(--green)'));
+
+    const overrideIcon = r.hasOverride ? ' *' : '';
+
+    const tr = document.createElement('tr');
+    tr.className = rowClass;
+    tr.dataset.idx = r.idx;
+    tr.onclick = () => viewBatchPlane(r.idx);
+    tr.innerHTML = `
+      <td title="${p.name}">${p.name.length > 20 ? p.name.slice(0, 18) + '…' : p.name}${overrideIcon}</td>
+      <td>${aDeg}°</td>
+      <td>${cDeg}°</td>
+      <td style="color:${fColor}">${fMargin}</td>
+      <td style="color:${sColor}">${sMargin}</td>
+      <td>${cMin}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.setBatchFilter = function(filter) {
+  batchFilter = filter;
+  renderBatchTable();
+};
+
+function viewBatchPlane(idx) {
+  batchActiveIdx = idx;
+  const plane = batchPlanes[idx];
+  const override = planeOverrides[idx] || {};
+  const r = batchResults[idx];
+
+  // Format the plane block back to pasteable text
+  const planeText = formatPlaneText(plane.name, plane.origin, plane.matrix);
+  document.getElementById('in-plane').value = planeText;
+
+  // Restore Z values as positive: use override if set, otherwise restore global from batch result
+  const displayZF = override.zFeature !== undefined ? override.zFeature : r.zFeature;
+  document.getElementById('in-zfeature').value = Math.abs(displayZF);
+
+  // Run single-plane calc to show full analysis + 3D
+  calculate();
+
+  // Re-highlight active row
+  renderBatchTable();
+}
+
+window.overridePlaneZ = function(idx, event) {
+  event.stopPropagation();
+  const r = batchResults[idx];
+  const current = planeOverrides[idx] || {};
+  const currentZF = current.zFeature !== undefined ? Math.abs(current.zFeature) : Math.abs(r.zFeature);
+  const newZF = prompt('Z machining level for "' + batchPlanes[idx].name + '" (positive):', currentZF);
+  if (newZF === null) return;
+
+  if (newZF !== '') {
+    if (!planeOverrides[idx]) planeOverrides[idx] = {};
+    planeOverrides[idx].zFeature = -Math.abs(parseFloat(newZF));
+  } else {
+    delete planeOverrides[idx];
+  }
+  calculateBatch();
+};
+
+window.copyAdjusted = function() {
+  const text = document.getElementById('adjusted-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'COPIED';
+    setTimeout(() => btn.textContent = 'COPY', 1500);
+  });
+};
+
+// ═══════════════════════════════════════════════════
+// SECTION TOGGLE
+// ═══════════════════════════════════════════════════
+window.toggleSection = function(id) {
+  const sec = document.getElementById(id);
+  const header = sec.querySelector('.section-header');
+  const body = sec.querySelector('.section-body');
+  header.classList.toggle('collapsed');
+  body.classList.toggle('collapsed');
+};
+
+window.toggleAdjusted3D = function(event) {
+  event.stopPropagation(); // don't toggle the section collapse
+  showAdjusted3D = !showAdjusted3D;
+  const btn = document.getElementById('btn-show-adj3d');
+  btn.textContent = showAdjusted3D ? 'HIDE 3D' : 'SHOW 3D';
+  btn.style.borderColor = showAdjusted3D ? 'var(--green)' : '';
+  btn.style.color = showAdjusted3D ? 'var(--green)' : '';
+  updateScene(true);
+};
+
+function collapseSection(id) {
+  const sec = document.getElementById(id);
+  if (!sec) return;
+  const header = sec.querySelector('.section-header');
+  const body = sec.querySelector('.section-body');
+  if (!header.classList.contains('collapsed')) {
+    header.classList.add('collapsed');
+    body.classList.add('collapsed');
+  }
+}
+
+function collapseInputSections() {
+  collapseSection('sec-inputs');
+}
+
+// ═══════════════════════════════════════════════════
+// SETTINGS PERSISTENCE
+// ═══════════════════════════════════════════════════
+function saveSettings() {
+  const data = {
+    zLimit: document.getElementById('in-zlimit').value,
+    zTravel: document.getElementById('in-ztravel').value,
+    toolLen: document.getElementById('in-toollen').value,
+    toolRadius: document.getElementById('in-toolradius').value,
+    machMode: document.getElementById('in-machmode').value,
+    zFeature: document.getElementById('in-zfeature').value,
+    partHeight: document.getElementById('in-partheight').value,
+    clearanceHeight: document.getElementById('in-clearanceheight').value,
+  };
+  localStorage.setItem('planeCalcSettings', JSON.stringify(data));
+}
+
+function loadSettings() {
+  try {
+    const data = JSON.parse(localStorage.getItem('planeCalcSettings'));
+    if (data) {
+      if (data.zLimit) document.getElementById('in-zlimit').value = data.zLimit;
+      if (data.zTravel) document.getElementById('in-ztravel').value = data.zTravel;
+      if (data.toolLen) document.getElementById('in-toollen').value = data.toolLen;
+      if (data.toolRadius) document.getElementById('in-toolradius').value = data.toolRadius;
+      if (data.machMode) document.getElementById('in-machmode').value = data.machMode;
+      if (data.zFeature) document.getElementById('in-zfeature').value = data.zFeature;
+      if (data.partHeight) document.getElementById('in-partheight').value = data.partHeight;
+      if (data.clearanceHeight) document.getElementById('in-clearanceheight').value = data.clearanceHeight;
+    }
+  } catch (e) {}
+}
+
+// Auto-save and auto-calculate on any input change
+function onInputChange() { saveSettings(); calculate(); }
+document.getElementById('in-zlimit').addEventListener('change', onInputChange);
+document.getElementById('in-ztravel').addEventListener('change', onInputChange);
+document.getElementById('in-toollen').addEventListener('change', onInputChange);
+document.getElementById('in-toolradius').addEventListener('change', onInputChange);
+document.getElementById('in-machmode').addEventListener('change', onInputChange);
+document.getElementById('in-zfeature').addEventListener('change', onInputChange);
+document.getElementById('in-partheight').addEventListener('change', onInputChange);
+document.getElementById('in-clearanceheight').addEventListener('change', onInputChange);
+document.getElementById('in-plane').addEventListener('input', onInputChange);
+
+// ═══════════════════════════════════════════════════
+// THREE.JS SCENE SETUP
+// ═══════════════════════════════════════════════════
+function initScene() {
+  const canvas = document.getElementById('three-canvas');
+  const container = canvas.parentElement;
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setClearColor(0x0a0e14);
+
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 50000);
+  camera.position.set(2500, -3000, 2000);
+  camera.up.set(0, 0, 1); // Z-up
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.1;
+  controls.target.set(0, 0, 200);
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0x404060, 1.5);
+  scene.add(ambientLight);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  dirLight.position.set(200, -300, 500);
+  scene.add(dirLight);
+  const dirLight2 = new THREE.DirectionalLight(0x8888ff, 0.4);
+  dirLight2.position.set(-200, 300, 100);
+  scene.add(dirLight2);
+
+  // Axes helper (subtle)
+  const axes = new THREE.AxesHelper(50);
+  axes.material.opacity = 0.3;
+  axes.material.transparent = true;
+  scene.add(axes);
+
+  resize();
+  window.addEventListener('resize', resize);
+  animate();
+
+  // Build default scene
+  buildDefaultScene();
+}
+
+function resize() {
+  const container = document.querySelector('.right-panel');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+  updateLabels();
+}
+
+// ═══════════════════════════════════════════════════
+// SCENE BUILDING
+// ═══════════════════════════════════════════════════
+function clearSceneObjects() {
+  for (const key in sceneObjects) {
+    if (sceneObjects[key]) {
+      scene.remove(sceneObjects[key]);
+      disposeObject(sceneObjects[key]);
+      sceneObjects[key] = null;
+    }
+  }
+  clearLabels();
+}
+
+function disposeObject(obj) {
+  obj.traverse(child => {
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) {
+      if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+      else child.material.dispose();
+    }
+  });
+}
+
+function buildDefaultScene() {
+  buildTable(new THREE.Vector3(0, 0, 0));
+  addLabel(new THREE.Vector3(0, -1300, 2), 'Table / Z=0', '');
+}
+
+// ── Coordinate helpers ──
+// Machine: Z=0 at table, Z negative = above table (head retracts upward).
+// Display: Z-up convention. Feature point at display (0,0,0).
+//   display.z = -(machineZ - featureZ)
+//   So table (machineZ=0) → display.z = -(0 - featureZ) = featureZ (negative, below feature)
+//   Z limit (machineZ=-980) → display.z = -(-980 - featureZ) = 980 + featureZ (positive if limit > feature)
+// featureZ is the Z height of the feature being machined (always negative = above table).
+function machineZToDisplay(machineZ, featureZ) {
+  return -(machineZ - featureZ);
+}
+
+// Table: 3000mm X × 2500mm Y, fixed size. Front = -Y (operator side).
+const TABLE_X = 3000;
+const TABLE_Y = 2500;
+
+function buildTable(center) {
+  const group = new THREE.Group();
+
+  // Grid — use rectangular grid via scaling a square GridHelper
+  // GridHelper is always square, so we build a custom grid from lines
+  const gridGroup = new THREE.Group();
+  const gridMat = new THREE.LineBasicMaterial({ color: 0x2a3a4a, transparent: true, opacity: 0.5 });
+  const gridSpacing = 250; // mm between grid lines
+
+  // Lines parallel to X axis (varying Y)
+  for (let y = -TABLE_Y / 2; y <= TABLE_Y / 2; y += gridSpacing) {
+    const geo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-TABLE_X / 2, y, 0),
+      new THREE.Vector3(TABLE_X / 2, y, 0),
+    ]);
+    gridGroup.add(new THREE.Line(geo, gridMat));
+  }
+  // Lines parallel to Y axis (varying X)
+  for (let x = -TABLE_X / 2; x <= TABLE_X / 2; x += gridSpacing) {
+    const geo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x, -TABLE_Y / 2, 0),
+      new THREE.Vector3(x, TABLE_Y / 2, 0),
+    ]);
+    gridGroup.add(new THREE.Line(geo, gridMat));
+  }
+  gridGroup.position.set(center.x, center.y, center.z);
+  group.add(gridGroup);
+
+  // Solid table surface
+  const planeGeo = new THREE.PlaneGeometry(TABLE_X, TABLE_Y);
+  const planeMat = new THREE.MeshStandardMaterial({ color: 0x1a2535, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
+  const planeMesh = new THREE.Mesh(planeGeo, planeMat);
+  planeMesh.position.set(center.x, center.y, center.z - 0.5);
+  group.add(planeMesh);
+
+  // Table border — thicker outline
+  const borderPts = [
+    new THREE.Vector3(-TABLE_X / 2, -TABLE_Y / 2, 0),
+    new THREE.Vector3(TABLE_X / 2, -TABLE_Y / 2, 0),
+    new THREE.Vector3(TABLE_X / 2, TABLE_Y / 2, 0),
+    new THREE.Vector3(-TABLE_X / 2, TABLE_Y / 2, 0),
+    new THREE.Vector3(-TABLE_X / 2, -TABLE_Y / 2, 0),
+  ].map(p => p.add(center));
+  const borderGeo = new THREE.BufferGeometry().setFromPoints(borderPts);
+  const borderMat = new THREE.LineBasicMaterial({ color: 0x3a4a5a });
+  group.add(new THREE.Line(borderGeo, borderMat));
+
+  // Front edge highlight — bright stripe along -Y edge (operator side)
+  const frontPts = [
+    new THREE.Vector3(-TABLE_X / 2 + center.x, -TABLE_Y / 2 + center.y, center.z + 0.5),
+    new THREE.Vector3(TABLE_X / 2 + center.x, -TABLE_Y / 2 + center.y, center.z + 0.5),
+  ];
+  const frontGeo = new THREE.BufferGeometry().setFromPoints(frontPts);
+  const frontMat = new THREE.LineBasicMaterial({ color: 0x58a6ff, linewidth: 2 });
+  group.add(new THREE.Line(frontGeo, frontMat));
+
+  // Side labels
+  addLabel(new THREE.Vector3(center.x, -TABLE_Y / 2 + center.y - 40, center.z), 'FRONT (operator)', '');
+  addLabel(new THREE.Vector3(center.x, TABLE_Y / 2 + center.y + 60, center.z), 'BACK', '');
+  addLabel(new THREE.Vector3(TABLE_X / 2 + center.x + 60, center.y, center.z), 'RIGHT', '');
+  addLabel(new THREE.Vector3(-TABLE_X / 2 + center.x - 60, center.y, center.z), 'LEFT', '');
+
+  scene.add(group);
+  sceneObjects.table = group;
+}
+
+function buildStone(partHeight, zStone, featureZ, sceneScale) {
+  const tableZ = machineZToDisplay(0, featureZ);
+  const w = sceneScale * 0.6;
+  const d = sceneScale * 0.45;
+  const group = new THREE.Group();
+
+  // Part box: from table up to part height
+  if (partHeight !== null && partHeight > 0) {
+    const partTopZ = machineZToDisplay(-partHeight, featureZ);
+    const partH = partTopZ - tableZ;
+    if (partH > 1) {
+      const geo = new THREE.BoxGeometry(w, d, partH);
+      const mat = new THREE.MeshStandardMaterial({ color: 0xd4c5a9, roughness: 0.8, transparent: true, opacity: 0.5 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(0, 0, tableZ + partH / 2);
+      group.add(mesh);
+
+      const edges = new THREE.EdgesGeometry(geo);
+      const edgeMat = new THREE.LineBasicMaterial({ color: 0x8a7a5a, opacity: 0.5, transparent: true });
+      const wireframe = new THREE.LineSegments(edges, edgeMat);
+      wireframe.position.copy(mesh.position);
+      group.add(wireframe);
+
+      addLabel(new THREE.Vector3(-w / 2 - 10, 0, partTopZ), `Part Top (${partHeight})`, 'label-dim');
+    }
+  }
+
+  // Clearance plane: translucent amber at clearance level height (same XY as machining plane)
+  if (zStone !== null && !isNaN(zStone)) {
+    const clearTopZ = machineZToDisplay(zStone, featureZ);
+    const cw = sceneScale * 0.8;
+    const cd = sceneScale * 0.6;
+    const planeGeo = new THREE.PlaneGeometry(cw, cd);
+    const planeMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+    const planeMesh = new THREE.Mesh(planeGeo, planeMat);
+    planeMesh.position.set(0, 0, clearTopZ);
+    group.add(planeMesh);
+
+    // Border frame
+    const borderGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-cw/2, -cd/2, clearTopZ), new THREE.Vector3(cw/2, -cd/2, clearTopZ),
+      new THREE.Vector3(cw/2, cd/2, clearTopZ), new THREE.Vector3(-cw/2, cd/2, clearTopZ),
+      new THREE.Vector3(-cw/2, -cd/2, clearTopZ),
+    ]);
+    const borderMat = new THREE.LineBasicMaterial({ color: 0xffaa00, opacity: 0.6, transparent: true });
+    const border = new THREE.Line(borderGeo, borderMat);
+    group.add(border);
+
+    addLabel(new THREE.Vector3(cw / 2 + 10, 0, clearTopZ), `Clearance Level (Z=${Math.abs(zStone)})`, 'label-amber');
+  }
+
+  scene.add(group);
+  sceneObjects.stone = group;
+}
+
+function buildMachiningPlane(sceneScale) {
+  const group = new THREE.Group();
+  const w = sceneScale * 0.8;
+  const d = sceneScale * 0.6;
+  const displayZ = 0; // machining level is at the feature origin
+
+  const planeGeo = new THREE.PlaneGeometry(w, d);
+  const planeMat = new THREE.MeshStandardMaterial({ color: 0x58a6ff, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+  const planeMesh = new THREE.Mesh(planeGeo, planeMat);
+  planeMesh.position.set(0, 0, displayZ);
+  group.add(planeMesh);
+
+  const borderGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-w/2, -d/2, displayZ), new THREE.Vector3(w/2, -d/2, displayZ),
+    new THREE.Vector3(w/2, d/2, displayZ), new THREE.Vector3(-w/2, d/2, displayZ),
+    new THREE.Vector3(-w/2, -d/2, displayZ),
+  ]);
+  const borderMat = new THREE.LineBasicMaterial({ color: 0x58a6ff, opacity: 0.5, transparent: true });
+  const border = new THREE.Line(borderGeo, borderMat);
+  group.add(border);
+
+  scene.add(group);
+  sceneObjects.machiningPlane = group;
+}
+
+function buildZLimitPlane(zLimit, featureZ) {
+  const group = new THREE.Group();
+  const displayZ = machineZToDisplay(zLimit, featureZ);
+  const hx = TABLE_X / 2;
+  const hy = TABLE_Y / 2;
+
+  // Dashed frame (no fill)
+  const borderGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-hx, -hy, displayZ), new THREE.Vector3(hx, -hy, displayZ),
+    new THREE.Vector3(hx, hy, displayZ), new THREE.Vector3(-hx, hy, displayZ),
+    new THREE.Vector3(-hx, -hy, displayZ),
+  ]);
+  const borderMat = new THREE.LineDashedMaterial({ color: 0xff4444, dashSize: 30, gapSize: 15, opacity: 0.5, transparent: true });
+  const border = new THREE.Line(borderGeo, borderMat);
+  border.computeLineDistances();
+  group.add(border);
+
+  scene.add(group);
+  sceneObjects.zLimitPlane = group;
+
+  addLabel(new THREE.Vector3(0, -hy - 40, displayZ), `Z Upper Limit (${Math.abs(zLimit)} mm)`, 'label-red');
+}
+
+function buildZLowerLimitPlane(zLowerLimit, featureZ, sceneScale) {
+  const group = new THREE.Group();
+  const displayZ = machineZToDisplay(zLowerLimit, featureZ);
+  const w = sceneScale * 0.8;
+  const d = sceneScale * 0.6;
+
+  // Dashed frame (no fill), same size as machining/clearance planes
+  const borderGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-w/2, -d/2, displayZ), new THREE.Vector3(w/2, -d/2, displayZ),
+    new THREE.Vector3(w/2, d/2, displayZ), new THREE.Vector3(-w/2, d/2, displayZ),
+    new THREE.Vector3(-w/2, -d/2, displayZ),
+  ]);
+  const borderMat = new THREE.LineDashedMaterial({ color: 0x555555, dashSize: 20, gapSize: 12, opacity: 0.6, transparent: true });
+  const border = new THREE.Line(borderGeo, borderMat);
+  border.computeLineDistances();
+  group.add(border);
+
+  scene.add(group);
+  sceneObjects.zLowerLimitPlane = group;
+
+  addLabel(new THREE.Vector3(w / 2 + 10, 0, displayZ), `Z Lower Limit (${Math.abs(zLowerLimit)} mm)`, '');
+}
+
+function buildToolVector(featureOrigin, normal, toolLen, color, groupKey, sceneScale, toolRadius, featureZOffset, diskColor) {
+  const group = new THREE.Group();
+  const dc = diskColor || color;
+
+  const featurePos = new THREE.Vector3(0, 0, featureZOffset || 0);
+  const dispDir = new THREE.Vector3(-normal[0], -normal[1], -normal[2]).normalize();
+  const pivotPos = featurePos.clone().add(dispDir.clone().multiplyScalar(-toolLen));
+  const upDir = pivotPos.clone().sub(featurePos).normalize();
+
+  // Tool shaft
+  const shaftRadius = sceneScale * 0.008;
+  const cylGeo = new THREE.CylinderGeometry(shaftRadius, shaftRadius, toolLen, 8);
+  const cylMat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.3, depthTest: false });
+  const cyl = new THREE.Mesh(cylGeo, cylMat);
+  cyl.position.copy(featurePos.clone().add(pivotPos).multiplyScalar(0.5));
+  cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), upDir);
+  group.add(cyl);
+
+  // Tip — disk perpendicular to tool shaft if radius provided, otherwise small sphere
+  if (toolRadius && toolRadius > 0) {
+    const diskGeo = new THREE.CircleGeometry(toolRadius, 32);
+    const diskMat = new THREE.MeshBasicMaterial({ color: dc, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false, depthTest: false });
+    const disk = new THREE.Mesh(diskGeo, diskMat);
+    disk.position.copy(featurePos);
+    disk.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upDir);
+    group.add(disk);
+    const edgeThickness = Math.max(0.5, toolRadius * 0.03);
+    const ringGeo = new THREE.TorusGeometry(toolRadius, edgeThickness, 12, 32);
+    const ringMat = new THREE.MeshStandardMaterial({ color: dc, emissive: dc, emissiveIntensity: 0.8, transparent: true, opacity: 0.8, depthWrite: false, depthTest: false });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(featurePos);
+    ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upDir);
+    group.add(ring);
+  } else {
+    const tipGeo = new THREE.SphereGeometry(sceneScale * 0.015, 16, 16);
+    const tipMat = new THREE.MeshStandardMaterial({ color: dc, emissive: dc, emissiveIntensity: 0.5, depthTest: false });
+    const tip = new THREE.Mesh(tipGeo, tipMat);
+    tip.position.copy(featurePos);
+    group.add(tip);
+  }
+
+  // Arrow extending past pivot
+  const arrowLen = sceneScale * 0.12;
+  const toolDir = dispDir.clone().negate();
+  const arrow = new THREE.ArrowHelper(toolDir, pivotPos.clone(), arrowLen, color, arrowLen * 0.3, arrowLen * 0.15);
+  arrow.line.material.depthTest = false;
+  arrow.cone.material.depthTest = false;
+  group.add(arrow);
+
+  scene.add(group);
+  sceneObjects[groupKey] = group;
+}
+
+function buildPivotPoint(featureZ, normal, toolLen, zLimit, C, groupKey, labelText, sceneScale, opts) {
+  const group = new THREE.Group();
+  const featureZOffset = (opts && opts.featureZOffset) || 0;
+  const colorOverride = opts && opts.colorOverride;
+  const effectiveFeatureZ = (opts && opts.effectiveFeatureZ != null) ? opts.effectiveFeatureZ : featureZ;
+
+  const dispDir = new THREE.Vector3(-normal[0], -normal[1], -normal[2]).normalize();
+  const pivotPos = new THREE.Vector3(0, 0, featureZOffset).add(dispDir.clone().multiplyScalar(-toolLen));
+
+  const zPivotMachine = effectiveFeatureZ - toolLen * Math.cos(C);
+  const zLowerLimit = opts && opts.zLowerLimit;
+  const aboveUpper = zPivotMachine >= zLimit;
+  const aboveLower = (zLowerLimit == null) || (zPivotMachine >= zLowerLimit);
+  const isOk = colorOverride ? false : (aboveUpper && aboveLower);
+
+  const corColor = colorOverride || (isOk ? 0x00ff88 : 0xff4444);
+  const corRadius = sceneScale * 0.03;
+  const corHeight = sceneScale * 0.06;
+
+  // Get perpendicular axis to tool shaft for cylinder orientation
+  const up = new THREE.Vector3(0, 0, 1);
+  let perpAxis = new THREE.Vector3().crossVectors(dispDir, up).normalize();
+  if (perpAxis.length() < 0.01) perpAxis = new THREE.Vector3().crossVectors(dispDir, new THREE.Vector3(1, 0, 0)).normalize();
+
+  // Cylinder perpendicular to tool shaft (represents C axis rotation)
+  const cylGeo = new THREE.CylinderGeometry(corRadius, corRadius, corHeight, 24);
+  const cylMat = new THREE.MeshStandardMaterial({ color: corColor, emissive: corColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.85, depthTest: false });
+  const cyl = new THREE.Mesh(cylGeo, cylMat);
+  cyl.position.copy(pivotPos);
+  // Cylinder Y-axis → perpendicular to tool shaft
+  cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), perpAxis);
+  group.add(cyl);
+
+  // Wireframe circles with crosshairs on each end of the cylinder
+  const crossMat = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.7, transparent: true, depthTest: false });
+  const perp2 = new THREE.Vector3().crossVectors(dispDir, perpAxis).normalize();
+  const halfH = corHeight / 2;
+
+  [-1, 1].forEach(side => {
+    const center = pivotPos.clone().add(perpAxis.clone().multiplyScalar(side * halfH));
+
+    // Circle on cylinder end face (in the plane of dispDir x perp2)
+    const circPts = [];
+    const segments = 32;
+    for (let i = 0; i <= segments; i++) {
+      const theta = (i / segments) * Math.PI * 2;
+      circPts.push(center.clone()
+        .add(dispDir.clone().multiplyScalar(Math.cos(theta) * corRadius))
+        .add(perp2.clone().multiplyScalar(Math.sin(theta) * corRadius)));
+    }
+    const circGeo = new THREE.BufferGeometry().setFromPoints(circPts);
+    group.add(new THREE.Line(circGeo, crossMat));
+
+    // Crosshairs on each end
+    [dispDir, perp2].forEach(axis => {
+      const a = center.clone().add(axis.clone().multiplyScalar(corRadius));
+      const b = center.clone().add(axis.clone().multiplyScalar(-corRadius));
+      const geo = new THREE.BufferGeometry().setFromPoints([a, b]);
+      group.add(new THREE.Line(geo, crossMat));
+    });
+  });
+
+  scene.add(group);
+  sceneObjects[groupKey] = group;
+
+  // Offset label: adjusted pivots go to the left, original pivots to the right
+  const isAdj = groupKey.includes('Adjusted');
+  const labelOffset = new THREE.Vector3(
+    isAdj ? -sceneScale * 0.1 : sceneScale * 0.1,
+    0,
+    isAdj ? sceneScale * 0.05 : -sceneScale * 0.05
+  );
+  // Show CoR position within travel window (0 = lower limit, travel = upper limit)
+  let zDisplayVal;
+  if (zLowerLimit != null) {
+    zDisplayVal = (zLowerLimit - zPivotMachine).toFixed(1);
+  } else {
+    zDisplayVal = Math.abs(zPivotMachine).toFixed(1);
+  }
+  addLabel(pivotPos.clone().add(labelOffset),
+    `${labelText} (Z=${zDisplayVal})`, colorOverride ? 'label-red' : (isOk ? 'label-green' : 'label-red'));
+}
+
+function buildMachineZAxis(pivotPos, sceneScale) {
+  const group = new THREE.Group();
+  const ext = sceneScale * 0.15; // extend below pivot (Z axis points down toward table)
+
+  // Dashed line from pivot downward along -Z (toward table / feature)
+  const top = pivotPos.clone();
+  top.z = pivotPos.z + ext * 0.3; // small extension above pivot
+  const bottom = pivotPos.clone();
+  bottom.z = pivotPos.z - ext;
+
+  const pts = [top, bottom];
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const dash = sceneScale * 0.01;
+  const mat = new THREE.LineDashedMaterial({ color: 0xffffff, dashSize: dash, gapSize: dash * 0.7, opacity: 0.6, transparent: true });
+  const line = new THREE.Line(geo, mat);
+  line.computeLineDistances();
+  group.add(line);
+
+  addLabel(bottom.clone().add(new THREE.Vector3(0, 0, -sceneScale * 0.02)), 'Z', '', 0.5);
+
+  scene.add(group);
+  sceneObjects.machineZAxis = group;
+}
+
+function buildGhostTool(normal, toolLen, zOffset, sceneScale, stoneOk, toolRadius) {
+  const group = new THREE.Group();
+
+  const ghostFeature = new THREE.Vector3(0, 0, zOffset);
+  const dispDir = new THREE.Vector3(-normal[0], -normal[1], -normal[2]).normalize();
+  const ghostPivot = ghostFeature.clone().add(dispDir.clone().multiplyScalar(-toolLen));
+  const upDir = ghostPivot.clone().sub(ghostFeature).normalize();
+
+  // Color: green if stone clears (or no stone), red if it doesn't
+  const ghostColor = (stoneOk === false) ? 0xff4444 : 0x44cc44;
+
+  // Tool shaft
+  const shaftRadius = sceneScale * 0.008;
+  const cylGeo = new THREE.CylinderGeometry(shaftRadius, shaftRadius, toolLen, 8);
+  const cylMat = new THREE.MeshStandardMaterial({ color: ghostColor, emissive: ghostColor, emissiveIntensity: 0.3, transparent: true, opacity: 0.5, depthTest: false });
+  const cyl = new THREE.Mesh(cylGeo, cylMat);
+  cyl.position.copy(ghostFeature.clone().add(ghostPivot).multiplyScalar(0.5));
+  cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), upDir);
+  group.add(cyl);
+
+  // Tip — disk perpendicular to tool shaft if radius provided, otherwise small sphere
+  if (toolRadius && toolRadius > 0) {
+    const diskGeo = new THREE.CircleGeometry(toolRadius, 32);
+    const diskMat = new THREE.MeshBasicMaterial({ color: ghostColor, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false, depthTest: false });
+    const disk = new THREE.Mesh(diskGeo, diskMat);
+    disk.position.copy(ghostFeature);
+    disk.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upDir);
+    group.add(disk);
+    const edgeThickness = Math.max(0.5, toolRadius * 0.03);
+    const ringGeo = new THREE.TorusGeometry(toolRadius, edgeThickness, 12, 32);
+    const ringMat = new THREE.MeshStandardMaterial({ color: ghostColor, emissive: ghostColor, emissiveIntensity: 0.8, transparent: true, opacity: 0.8, depthWrite: false, depthTest: false });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(ghostFeature);
+    ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upDir);
+    group.add(ring);
+  } else {
+    const tipGeo = new THREE.SphereGeometry(sceneScale * 0.015, 16, 16);
+    const tipMat = new THREE.MeshStandardMaterial({ color: ghostColor, emissive: ghostColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.5, depthTest: false });
+    const tip = new THREE.Mesh(tipGeo, tipMat);
+    tip.position.copy(ghostFeature);
+    group.add(tip);
+  }
+
+  // Small CoR ball at ghost pivot
+  const pivotGeo = new THREE.SphereGeometry(sceneScale * 0.012, 12, 12);
+  const pivotMat = new THREE.MeshStandardMaterial({ color: ghostColor, emissive: ghostColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.5, depthTest: false });
+  const pivot = new THREE.Mesh(pivotGeo, pivotMat);
+  pivot.position.copy(ghostPivot);
+  group.add(pivot);
+
+  // Arrow extending past pivot
+  const arrowLen = sceneScale * 0.12;
+  const toolDir = dispDir.clone().negate();
+  const arrow = new THREE.ArrowHelper(toolDir, ghostPivot.clone(), arrowLen, ghostColor, arrowLen * 0.3, arrowLen * 0.15);
+  arrow.line.material.depthTest = false;
+  arrow.cone.material.depthTest = false;
+  group.add(arrow);
+
+  scene.add(group);
+  sceneObjects.ghostTool = group;
+}
+
+function buildReachTool(normal, toolLen, corDisplayZ, sceneScale, reachable, toolRadius) {
+  const group = new THREE.Group();
+
+  // CoR is positioned at the lower limit in display coords
+  const dispDir = new THREE.Vector3(-normal[0], -normal[1], -normal[2]).normalize();
+  const upDir = dispDir.clone().negate().normalize(); // from tip toward CoR
+
+  // CoR position: same XY as the original pivot, but at the lower limit Z
+  const corPos = dispDir.clone().multiplyScalar(-toolLen);
+  corPos.z = corDisplayZ;
+  // Tool tip: CoR + toolLen along surface normal direction (toward feature)
+  const tipPos = corPos.clone().add(dispDir.clone().multiplyScalar(toolLen));
+
+  const reachColor = reachable === false ? 0xff4444 : 0x555555;
+
+  // Tool shaft
+  const shaftRadius = sceneScale * 0.008;
+  const cylGeo = new THREE.CylinderGeometry(shaftRadius, shaftRadius, toolLen, 8);
+  const cylMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.3, transparent: true, opacity: 0.4, depthTest: false });
+  const cyl = new THREE.Mesh(cylGeo, cylMat);
+  cyl.position.copy(tipPos.clone().add(corPos).multiplyScalar(0.5));
+  cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), upDir);
+  group.add(cyl);
+
+  // Tip — disk or sphere
+  if (toolRadius && toolRadius > 0) {
+    const diskGeo = new THREE.CircleGeometry(toolRadius, 32);
+    const diskMat = new THREE.MeshBasicMaterial({ color: reachColor, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false, depthTest: false });
+    const disk = new THREE.Mesh(diskGeo, diskMat);
+    disk.position.copy(tipPos);
+    disk.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upDir);
+    group.add(disk);
+    const edgeThickness = Math.max(0.5, toolRadius * 0.03);
+    const ringGeo = new THREE.TorusGeometry(toolRadius, edgeThickness, 12, 32);
+    const ringMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.8, transparent: true, opacity: 0.8, depthWrite: false, depthTest: false });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(tipPos);
+    ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upDir);
+    group.add(ring);
+  } else {
+    const tipGeo = new THREE.SphereGeometry(sceneScale * 0.015, 16, 16);
+    const tipMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.5, depthTest: false });
+    const tip = new THREE.Mesh(tipGeo, tipMat);
+    tip.position.copy(tipPos);
+    group.add(tip);
+  }
+
+  // Small CoR ball
+  const pivotGeo = new THREE.SphereGeometry(sceneScale * 0.012, 12, 12);
+  const pivotMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.5, depthTest: false });
+  const pivot = new THREE.Mesh(pivotGeo, pivotMat);
+  pivot.position.copy(corPos);
+  group.add(pivot);
+
+  // Arrow extending past CoR
+  const arrowLen = sceneScale * 0.12;
+  const toolDir = dispDir.clone().negate();
+  const arrow = new THREE.ArrowHelper(toolDir, corPos.clone(), arrowLen, reachColor, arrowLen * 0.3, arrowLen * 0.15);
+  arrow.line.material.depthTest = false;
+  arrow.cone.material.depthTest = false;
+  group.add(arrow);
+
+  scene.add(group);
+  sceneObjects.reachTool = group;
+}
+
+function buildAzimuthRing(A, sceneScale) {
+  const group = new THREE.Group();
+  const featurePos = new THREE.Vector3(0, 0, 0);
+  const radius = sceneScale * 0.2;
+
+  const ringGeo = new THREE.RingGeometry(radius - 1, radius + 1, 64);
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x58a6ff, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.copy(featurePos);
+  group.add(ring);
+
+  const lineEnd = new THREE.Vector3(radius * Math.cos(A), radius * Math.sin(A), 0);
+  const lineGeo = new THREE.BufferGeometry().setFromPoints([featurePos.clone(), lineEnd]);
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x58a6ff, opacity: 0.6, transparent: true });
+  group.add(new THREE.Line(lineGeo, lineMat));
+
+  // Push label further out past the ring edge so it doesn't overlap feature/arc labels
+  const labelDir = new THREE.Vector3(Math.cos(A), Math.sin(A), 0);
+  addLabel(lineEnd.clone().add(labelDir.multiplyScalar(radius * 0.15)), `A=${aDisplayDeg(A).toFixed(1)}°`, 'label-blue');
+
+  scene.add(group);
+  sceneObjects.azimuthRing = group;
+}
+
+function buildCArc(A, C, color, groupKey, labelPrefix, sceneScale, opacity, center) {
+  const group = new THREE.Group();
+  const radius = sceneScale * 0.15;
+  const segments = 32;
+  const cx = center ? center.x : 0;
+  const cy = center ? center.y : 0;
+  const cz = center ? center.z : 0;
+  const points = [];
+
+  for (let i = 0; i <= segments; i++) {
+    const t = (i / segments) * C;
+    const z = -Math.cos(t) * radius; // downward: C=0 is straight down
+    const horiz = Math.sin(t) * radius;
+    points.push(new THREE.Vector3(cx + horiz * Math.cos(A), cy + horiz * Math.sin(A), cz + z));
+  }
+
+  const arcGeo = new THREE.BufferGeometry().setFromPoints(points);
+  const matOpts = { color };
+  if (opacity !== undefined && opacity < 1) {
+    matOpts.transparent = true;
+    matOpts.opacity = opacity;
+  }
+  const arcMat = new THREE.LineBasicMaterial(matOpts);
+  group.add(new THREE.Line(arcGeo, arcMat));
+
+  // Place label at the arc tip (end point) and offset perpendicular to the A-plane
+  const tipPt = points[points.length - 1];
+  if (tipPt) {
+    const perpX = -Math.sin(A);
+    const perpY = Math.cos(A);
+    // Original arcs go one side, adjusted arcs go the other
+    const isCmin = labelPrefix && labelPrefix.includes('Clear');
+    const side = (labelPrefix && labelPrefix.includes('Adj')) ? 1 : (isCmin ? 1 : -1);
+    const off = sceneScale * 0.1 * side;
+    const labelPos = tipPt.clone().add(new THREE.Vector3(perpX * off, perpY * off, 0));
+    const labelClass = color === 0x58a6ff ? 'label-blue' : (color === 0xff4444 ? 'label-red' : (color === 0xffaa00 ? 'label-amber' : 'label-green'));
+    addLabel(labelPos,
+      `${labelPrefix}C=${toDeg(C).toFixed(1)}°`, labelClass, opacity);
+  }
+
+  scene.add(group);
+  sceneObjects[groupKey] = group;
+}
+
+// ═══════════════════════════════════════════════════
+// LABEL SYSTEM
+// ═══════════════════════════════════════════════════
+function addLabel(position, text, cssClass, opacity) {
+  const container = document.querySelector('.right-panel');
+  const div = document.createElement('div');
+  div.className = 'scene-label ' + (cssClass || '');
+  div.textContent = text;
+  if (opacity !== undefined && opacity < 1) div.style.opacity = opacity;
+  container.appendChild(div);
+  sceneLabels.push({ element: div, position: position.clone() });
+}
+
+function clearLabels() {
+  sceneLabels.forEach(l => l.element.remove());
+  sceneLabels = [];
+}
+
+function updateLabels() {
+  const container = document.querySelector('.right-panel');
+  const rect = container.getBoundingClientRect();
+
+  sceneLabels.forEach(label => {
+    const pos = label.position.clone().project(camera);
+    if (pos.z > 1) {
+      label.element.style.display = 'none';
+      return;
+    }
+    label.element.style.display = '';
+    const x = (pos.x * 0.5 + 0.5) * rect.width;
+    const y = (-pos.y * 0.5 + 0.5) * rect.height;
+    label.element.style.left = x + 'px';
+    label.element.style.top = y + 'px';
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// UPDATE SCENE FROM CALCULATION STATE
+// ═══════════════════════════════════════════════════
+function updateScene(skipReframe) {
+  if (!currentState) return;
+  const s = currentState;
+  const fo = s.plane.origin;
+  const fz = s.zFeature; // the actual machining Z height (always negative)
+
+  clearSceneObjects();
+
+  // Scene scale: range from table (Z=0) to Z limit, or tool length — whichever is larger
+  const zRange = Math.abs(s.zLimit); // full range from table to Z limit
+  const sceneScale = Math.max(s.toolLen, zRange, 400);
+
+  // Display coords: feature at (0,0,0). machineZ → display via machineZToDisplay(mz, fz).
+  // Table (machine Z=0) is BELOW the feature in display.
+  const tableZ = machineZToDisplay(0, fz);        // negative (below feature)
+  const zLimitZ = machineZToDisplay(s.zLimit, fz); // positive (above feature)
+
+  buildTable(new THREE.Vector3(0, 0, tableZ));
+  buildZLimitPlane(s.zLimit, fz);
+  if (s.zLowerLimit !== null) {
+    buildZLowerLimitPlane(s.zLowerLimit, fz, sceneScale);
+  }
+  buildMachiningPlane(sceneScale);
+
+  if (s.partHeight !== null || s.zStone !== null) {
+    buildStone(s.partHeight, s.zStone, fz, sceneScale);
+  }
+
+  // Pivot position in display coords (unclamped)
+  const dispDir = new THREE.Vector3(-s.plane.matrix[2][0], -s.plane.matrix[2][1], -s.plane.matrix[2][2]).normalize();
+  const pivotPos = dispDir.clone().multiplyScalar(-s.toolLen);
+
+  // Radius mode offset: in radius mode, raise tool center so disk edge sits on machining level
+  const radiusOffset = s.toolRadius * Math.sin(s.C);
+  const radiusDisplayOffset = (s.machMode === 'radius' && s.toolRadius > 0) ? radiusOffset : 0;
+  const effectiveFz = (s.machMode === 'radius' && s.toolRadius > 0) ? fz - radiusOffset : fz;
+
+  const zLimitDisplay = machineZToDisplay(s.zLimit, fz);
+
+  // No clamping — show the tool where it actually is
+  const feasible = s.featureOk && (s.reachable === null || s.reachable);
+  const origColor = feasible ? 0x58a6ff : 0xff4444;
+  const origDiskColor = feasible ? 0x00ff88 : 0xff4444;
+  buildToolVector(fo, s.plane.matrix[2], s.toolLen, origColor, 'toolOriginal', sceneScale, s.toolRadius, radiusDisplayOffset || undefined, origDiskColor);
+  buildPivotPoint(fz, s.plane.matrix[2], s.toolLen, s.zLimit, s.C, 'pivotOriginal', 'CoR', sceneScale,
+    { featureZOffset: radiusDisplayOffset || 0, effectiveFeatureZ: effectiveFz, zLowerLimit: s.zLowerLimit });
+
+  // Use offset pivot position for downstream visuals
+  const offsetPivotPos = pivotPos.clone();
+  offsetPivotPos.z += radiusDisplayOffset;
+
+  // Machine Z axis at pivot, ghost tool at Z limit, azimuth ring at feature, C arc at pivot
+  buildMachineZAxis(offsetPivotPos, sceneScale);
+  // Shift so ghost pivot lands at Z limit
+  const ghostOffset = zLimitDisplay - pivotPos.z;
+  buildGhostTool(s.plane.matrix[2], s.toolLen, ghostOffset, sceneScale, s.stoneOk, s.toolRadius);
+
+  // Reach tool: shows tool at lowest CoR position (lower Z travel limit)
+  if (s.zLowerLimit !== null) {
+    const zLowerDisplay = machineZToDisplay(s.zLowerLimit, fz);
+    buildReachTool(s.plane.matrix[2], s.toolLen, zLowerDisplay, sceneScale, s.reachable, s.toolRadius);
+  }
+
+  buildAzimuthRing(s.A, sceneScale);
+  buildCArc(s.A, s.C, 0x58a6ff, 'cArcOriginal', '', sceneScale, undefined, offsetPivotPos);
+
+
+  // Adjusted tool vector (only when toggled on)
+  if (s.adjusted && showAdjusted3D) {
+    const adjC = s.adjusted.C;
+    const adjRadiusOff = s.toolRadius * Math.sin(adjC);
+    const adjRadiusDisplayOff = (s.machMode === 'radius' && s.toolRadius > 0) ? adjRadiusOff : 0;
+    const adjEffectiveFz = (s.machMode === 'radius' && s.toolRadius > 0) ? fz - adjRadiusOff : fz;
+    const adjDispDir = new THREE.Vector3(-s.adjusted.normal[0], -s.adjusted.normal[1], -s.adjusted.normal[2]).normalize();
+    const adjPivotPos = adjDispDir.clone().multiplyScalar(-s.toolLen);
+    buildToolVector(fo, s.adjusted.normal, s.toolLen, 0x00ff88, 'toolAdjusted', sceneScale, s.toolRadius, adjRadiusDisplayOff || undefined);
+    buildPivotPoint(fz, s.adjusted.normal, s.toolLen, s.zLimit, adjC, 'pivotAdjusted', 'Adj CoR', sceneScale,
+      { featureZOffset: adjRadiusDisplayOff || 0, effectiveFeatureZ: adjEffectiveFz });
+    const adjOffsetPivot = adjPivotPos.clone();
+    adjOffsetPivot.z += adjRadiusOffset;
+    buildCArc(s.A, adjC, 0x00ff88, 'cArcAdjusted', 'Adj ', sceneScale, undefined, adjOffsetPivot);
+  }
+
+  // Machining level label — offset well below and to the side so it clears arcs and tool labels
+  addLabel(new THREE.Vector3(sceneScale * 0.15, -sceneScale * 0.08, -sceneScale * 0.15),
+    `Machining Level (Z=${Math.abs(fz)})`, 'label-blue');
+
+  if (!skipReframe && !hasFramedOnce) {
+    autoFrameCamera(s, sceneScale);
+    hasFramedOnce = true;
+  }
+}
+
+function autoFrameCamera(s, sceneScale) {
+  const fz = s.zFeature;
+  // Key display-Z positions (all relative to feature)
+  const tableZ = machineZToDisplay(0, fz);
+  const zLimitZ = machineZToDisplay(s.zLimit, fz);
+  const dispDir = new THREE.Vector3(-s.plane.matrix[2][0], -s.plane.matrix[2][1], -s.plane.matrix[2][2]).normalize();
+  const pivotPos = dispDir.clone().multiplyScalar(-s.toolLen);
+
+  const points = [
+    new THREE.Vector3(0, 0, 0),       // feature
+    new THREE.Vector3(0, 0, tableZ),   // table
+    new THREE.Vector3(0, 0, zLimitZ),  // z limit
+    pivotPos,
+    // Table corners for framing
+    new THREE.Vector3(TABLE_X / 2, TABLE_Y / 2, tableZ),
+    new THREE.Vector3(-TABLE_X / 2, -TABLE_Y / 2, tableZ),
+  ];
+  if (s.zStone !== null) {
+    points.push(new THREE.Vector3(0, 0, machineZToDisplay(s.zStone, fz)));
+  }
+
+  const box = new THREE.Box3();
+  points.forEach(p => box.expandByPoint(p));
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const maxDim = Math.max(size.x, size.y, size.z, sceneScale * 0.5);
+
+  controls.target.copy(center);
+  camera.position.set(
+    center.x + maxDim * 0.8,
+    center.y - maxDim * 1.0,
+    center.z + maxDim * 0.6
+  );
+  controls.update();
+}
+
+window.setView = function(view) {
+  const target = controls.target.clone();
+  const dist = camera.position.distanceTo(target);
+  const pos = target.clone();
+
+  switch (view) {
+    case 'top':
+      pos.set(target.x, target.y, target.z + dist);
+      break;
+    case 'front': // -Y looking toward +Y
+      pos.set(target.x, target.y - dist, target.z);
+      break;
+    case 'back': // +Y looking toward -Y
+      pos.set(target.x, target.y + dist, target.z);
+      break;
+    case 'right': // +X looking toward -X
+      pos.set(target.x + dist, target.y, target.z);
+      break;
+    case 'left': // -X looking toward +X
+      pos.set(target.x - dist, target.y, target.z);
+      break;
+  }
+
+  camera.position.copy(pos);
+  camera.up.set(0, 0, 1);
+  controls.update();
+};
+
+// ═══════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════
+loadSettings();
+initScene();
+
+// Restore last file handle from IndexedDB
+(async () => {
+  try {
+    const handle = await loadFileHandle();
+    if (handle) {
+      fileHandle = handle;
+      showFileName(handle.name);
+    }
+  } catch (e) {}
+})();
+
+</script>
+</body>
+</html>
