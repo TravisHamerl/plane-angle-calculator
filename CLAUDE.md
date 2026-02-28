@@ -9,7 +9,6 @@ Opens in any modern browser — no build step, no server, no dependencies beyond
 ## File
 
 - `index.html` — the entire application (~2,600 lines)
-- `check_syntax.mjs` — development utility for syntax checking
 
 ## Quick Start
 
@@ -21,8 +20,8 @@ Open `index.html` in a browser. Load a plane data file (Mastercam format or colo
 
 | Parameter | Description | Example |
 |-----------|-------------|---------|
-| Upper Z limit | Distance from table to upper Z travel limit | 980 mm |
-| Z axis travel | Total travel range of Z axis | 700 mm (optional) |
+| Upper Z limit | Machine Z at upper travel limit (entered positive, stored negative) | 980 → -980 |
+| Z axis travel | Total Z travel range; lower limit = upper + travel (e.g. -980+700=-280) | 700 mm (optional) |
 | Tool length | Distance from center of rotation (CoR) to tool tip | 300 mm |
 | Tool radius | Radius of the cutting tool | 50 mm (optional) |
 | Machining ref | Whether to reference tool center or tool edge (radius) | center / radius |
@@ -78,12 +77,12 @@ Multiple planes separated by `----` lines. Planes marked `*** NOT USED ***` are 
 | `stoneOk` | Stone pivot >= zLimit | Tool clears the stone at Z limit |
 | `feasible` | featureOk AND reachable | Full feasibility |
 
-### CoR Travel Window
+### CoR Z Display
 
-When Z travel is specified, the CoR position is displayed relative to the travel window:
-- Lower Z limit = Upper Z limit - Z travel (e.g., 980 - 700 = 280mm from table)
-- CoR display: 0 = at lower limit, travel value = at upper limit
-- Values outside 0 to travel = out of range (red)
+All Z values are displayed in machine coordinates (negative). For example:
+- Upper Z limit: -980
+- Lower Z limit: -280 (= -980 + 700 travel)
+- CoR Z: -650.0 (green if between -980 and -280, red if outside)
 
 ## 3D Visualization
 
@@ -102,7 +101,7 @@ Interactive Three.js scene showing the machine setup from any angle.
 | Main tool | Blue (ok) / Red (out of range) | Tool at commanded angle |
 | Main disk | Green (feasible) / Red (not) | Tool tip disk, green only when fully feasible |
 | Ghost tool | Green/Red translucent | Tool with CoR at upper Z limit |
-| Reach tool | Dark/Red translucent | Tool with CoR at lower Z limit |
+| Reach tool | Dark gray translucent | Tool with CoR at lower Z limit (always gray, never red) |
 | CoR cylinder | Green/Red | Center of rotation, perpendicular to tool shaft |
 | Azimuth ring | White | A-axis rotation indicator |
 | C arc | Blue | C-axis tilt arc from vertical |

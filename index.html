@@ -1063,7 +1063,7 @@ function showAnalysis(a) {
     const colorName = ok ? (margin < 20 ? 'amber' : 'green') : 'red';
     let h = `<div style="margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">${label}</div>`;
     h += `<div class="result-grid">
-      <span class="lbl">Z CoR:</span><span class="val">${Math.abs(zPivot).toFixed(2)} mm</span>
+      <span class="lbl">Z CoR:</span><span class="val">${zPivot.toFixed(2)} mm</span>
       <span class="lbl">Margin:</span><span class="val color-${colorName}">${margin.toFixed(2)} mm</span>
       <span class="lbl">Status:</span><span class="val"><span class="status-badge ${statusClass}">${statusText}</span></span>`;
     if (cMin !== null) {
@@ -1080,9 +1080,9 @@ function showAnalysis(a) {
   // Current angle summary
   html += `<div class="result-grid">
     <span class="lbl">Current C:</span><span class="val">${currentC.toFixed(2)}&deg;</span>
-    <span class="lbl">Upper Z limit:</span><span class="val">${Math.abs(a.zLimit).toFixed(2)} mm</span>`;
+    <span class="lbl">Upper Z limit:</span><span class="val">${a.zLimit.toFixed(2)} mm</span>`;
   if (a.zLowerLimit !== null) {
-    html += `<span class="lbl">Lower Z limit:</span><span class="val">${Math.abs(a.zLowerLimit).toFixed(2)} mm</span>`;
+    html += `<span class="lbl">Lower Z limit:</span><span class="val">${a.zLowerLimit.toFixed(2)} mm</span>`;
   }
   html += `</div>`;
 
@@ -1110,7 +1110,7 @@ function showAnalysis(a) {
     const reachColor = reachOk ? (reachMarginMm < 20 ? 'amber' : 'green') : 'red';
     html += `<div style="margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">Reachability</div>`;
     html += `<div class="result-grid">
-      <span class="lbl">Lower limit:</span><span class="val">${Math.abs(a.zLowerLimit).toFixed(2)} mm</span>
+      <span class="lbl">Lower limit:</span><span class="val">${a.zLowerLimit.toFixed(2)} mm</span>
       <span class="lbl">Margin:</span><span class="val color-${reachColor}">${reachMarginMm.toFixed(2)} mm</span>
       <span class="lbl">Status:</span><span class="val"><span class="status-badge ${reachStatusClass}">${reachStatusText}</span></span>`;
     if (cMaxReachDeg !== null) {
@@ -1222,7 +1222,7 @@ function showAdjusted(adj, originalC) {
     </div>
     <div class="divider"></div>
     <div class="result-grid">
-      <span class="lbl">Machining CoR:</span><span class="val">${Math.abs(adj.zPivotFeature).toFixed(2)} mm</span>
+      <span class="lbl">Machining CoR:</span><span class="val">${adj.zPivotFeature.toFixed(2)} mm</span>
       <span class="lbl">Machining level:</span><span class="val"><span class="status-badge ${featureStatusClass}">${featureStatusText}</span></span>
     </div>`;
 
@@ -1230,7 +1230,7 @@ function showAdjusted(adj, originalC) {
     const stoneStatusClass = adj.stoneOk ? 'status-ok' : 'status-fail';
     const stoneStatusText = adj.stoneOk ? 'OK' : 'OVER LIMIT';
     html += `<div class="result-grid" style="margin-top:4px">
-      <span class="lbl">Clearance CoR:</span><span class="val">${Math.abs(adj.zPivotStone).toFixed(2)} mm</span>
+      <span class="lbl">Clearance CoR:</span><span class="val">${adj.zPivotStone.toFixed(2)} mm</span>
       <span class="lbl">Clearance level:</span><span class="val"><span class="status-badge ${stoneStatusClass}">${stoneStatusText}</span></span>
     </div>`;
 
@@ -2055,9 +2055,9 @@ function buildPivotPoint(featureZ, normal, toolLen, zLimit, C, groupKey, labelTe
 
   const zPivotMachine = effectiveFeatureZ - toolLen * Math.cos(C);
   const zLowerLimit = opts && opts.zLowerLimit;
-  const aboveUpper = zPivotMachine >= zLimit;
-  const aboveLower = (zLowerLimit == null) || (zPivotMachine >= zLowerLimit);
-  const isOk = colorOverride ? false : (aboveUpper && aboveLower);
+  const withinUpper = zPivotMachine >= zLimit;  // not above upper Z limit
+  const withinLower = (zLowerLimit == null) || (zPivotMachine <= zLowerLimit);  // within reach (not below lower limit)
+  const isOk = colorOverride ? false : (withinUpper && withinLower);
 
   const corColor = colorOverride || (isOk ? 0x00ff88 : 0xff4444);
   const corRadius = sceneScale * 0.03;
@@ -2116,15 +2116,8 @@ function buildPivotPoint(featureZ, normal, toolLen, zLimit, C, groupKey, labelTe
     0,
     isAdj ? sceneScale * 0.05 : -sceneScale * 0.05
   );
-  // Show CoR position within travel window (0 = lower limit, travel = upper limit)
-  let zDisplayVal;
-  if (zLowerLimit != null) {
-    zDisplayVal = (zLowerLimit - zPivotMachine).toFixed(1);
-  } else {
-    zDisplayVal = Math.abs(zPivotMachine).toFixed(1);
-  }
   addLabel(pivotPos.clone().add(labelOffset),
-    `${labelText} (Z=${zDisplayVal})`, colorOverride ? 'label-red' : (isOk ? 'label-green' : 'label-red'));
+    `${labelText} (Z=${zPivotMachine.toFixed(1)})`, colorOverride ? 'label-red' : (isOk ? 'label-green' : 'label-red'));
 }
 
 function buildMachineZAxis(pivotPos, sceneScale) {
@@ -2226,7 +2219,7 @@ function buildReachTool(normal, toolLen, corDisplayZ, sceneScale, reachable, too
   // Tool tip: CoR + toolLen along surface normal direction (toward feature)
   const tipPos = corPos.clone().add(dispDir.clone().multiplyScalar(toolLen));
 
-  const reachColor = reachable === false ? 0xff4444 : 0x555555;
+  const reachColor = 0x555555;
 
   // Tool shaft
   const shaftRadius = sceneScale * 0.008;
