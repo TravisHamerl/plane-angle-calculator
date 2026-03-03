@@ -22,6 +22,7 @@
     --green: #00ff88;
     --red: #ff4444;
     --amber: #ffaa00;
+    --warn: #ff8c00;
     --blue: #58a6ff;
     --accent: #388bfd;
     --green-bg15: rgba(0,255,136,0.15);
@@ -34,6 +35,9 @@
     --amber-bg15: rgba(255,170,0,0.15);
     --amber-bg12: rgba(255,170,0,0.12);
     --amber-border: rgba(255,170,0,0.3);
+    --warn-bg15: rgba(255,140,0,0.25);
+    --warn-bg12: rgba(255,140,0,0.2);
+    --warn-border: rgba(255,140,0,0.45);
   }
 
   body {
@@ -247,6 +251,21 @@
     justify-content: flex-end;
   }
 
+  /* Mode toggle switch */
+  .mode-toggle {
+    display: flex; align-items: center; gap: 0; cursor: pointer; user-select: none;
+    background: var(--input-bg); border: 1px solid var(--border); border-radius: 4px;
+    overflow: hidden; font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase;
+    font-family: inherit; flex-shrink: 0;
+  }
+  .mode-toggle .mode-opt {
+    padding: 4px 10px; color: var(--text-dim); transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .mode-toggle .mode-opt.active {
+    background: var(--accent); color: #fff; font-weight: 700;
+  }
+
   /* Results */
   .result-grid {
     display: grid;
@@ -276,7 +295,7 @@
 
   .status-ok { background: var(--green-bg15); color: var(--green); border: 1px solid var(--green-border); }
   .status-fail { background: var(--red-bg15); color: var(--red); border: 1px solid var(--red-border); }
-  .status-warn { background: var(--amber-bg15); color: var(--amber); border: 1px solid var(--amber-border); }
+  .status-warn { background: var(--warn-bg15); color: var(--warn); border: 1px solid var(--warn-border); }
 
   /* Dashboard status cards */
   .status-card {
@@ -291,7 +310,7 @@
   }
   .status-card:hover { background: rgba(255,255,255,0.03); }
   .status-card.card-ok    { border-color: var(--green); }
-  .status-card.card-warn  { border-color: var(--amber); }
+  .status-card.card-warn  { border-color: var(--warn); }
   .status-card.card-fail  { border-color: var(--red); }
   .status-card .card-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); margin-bottom: 4px; font-weight: 600; }
   .status-card .card-badge { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
@@ -393,6 +412,7 @@
   .color-green { color: var(--green); font-weight: 700; }
   .color-red { color: var(--red); font-weight: 700; }
   .color-amber { color: var(--amber); font-weight: 700; }
+  .color-warn { color: var(--warn); font-weight: 700; }
   .color-blue { color: var(--blue); font-weight: 700; }
 
   /* Scrollbar */
@@ -442,7 +462,7 @@
 
   .batch-row-ok td:first-child { border-left: 3px solid var(--green); }
   .batch-row-fail td:first-child { border-left: 3px solid var(--red); }
-  .batch-row-warn td:first-child { border-left: 3px solid var(--amber); }
+  .batch-row-warn td:first-child { border-left: 3px solid var(--warn); }
   .batch-row-unused { opacity: 0.45; }
   .batch-row-active { background: rgba(88,166,255,0.12) !important; }
   .batch-row-active td:first-child { border-left-color: var(--blue) !important; }
@@ -458,7 +478,7 @@
 
   .batch-badge-ok { background: var(--green-bg12); color: var(--green); }
   .batch-badge-fail { background: var(--red-bg12); color: var(--red); }
-  .batch-badge-warn { background: var(--amber-bg12); color: var(--amber); }
+  .batch-badge-warn { background: var(--warn-bg12); color: var(--warn); }
 
   .batch-filter-bar {
     display: flex;
@@ -514,7 +534,11 @@
       <div class="section-body">
         <textarea id="in-plane" style="display:none"></textarea>
         <div class="btn-row" style="align-items:center;margin-bottom:6px">
-          <label style="font-size:10px;display:flex;align-items:center;gap:4px;color:var(--text-dim);cursor:pointer;white-space:nowrap"><input type="checkbox" id="chk-manual-mode" style="margin:0"> Manual</label>
+          <input type="checkbox" id="chk-manual-mode" style="display:none">
+          <div class="mode-toggle" id="mode-toggle">
+            <span class="mode-opt active" id="mode-opt-file">File</span>
+            <span class="mode-opt" id="mode-opt-manual">Manual</span>
+          </div>
           <span id="file-picker-row" style="display:contents">
             <span id="file-name" style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0" title="">No file loaded</span>
             <select id="sel-recent-files" style="font-size:10px;padding:3px 4px;max-width:120px;background:var(--input-bg);color:var(--text);border:1px solid var(--border);border-radius:4px">
@@ -578,10 +602,10 @@
       </div>
     </div>
 
-    <!-- Batch Results -->
+    <!-- Mastercam Planes -->
     <div class="section hidden" id="sec-batch">
       <div class="section-header" onclick="toggleSection('sec-batch')">
-        <h2>Batch Results <span id="batch-count" style="color:var(--text);font-weight:400"></span></h2>
+        <h2>Mastercam Planes <span id="batch-count" style="color:var(--text);font-weight:400"></span></h2>
         <span class="toggle">&#9660;</span>
       </div>
       <div class="section-body" style="padding:6px 8px">
@@ -589,11 +613,11 @@
         <div class="batch-scroll">
           <table class="batch-table">
             <thead><tr>
-              <th>Name</th>
-              <th>C°</th>
-              <th>A°</th>
-              <th>Machining</th>
-              <th>Clearance</th>
+              <th onclick="setBatchSort('name')" style="cursor:pointer;user-select:none">Name <span id="sort-name"></span></th>
+              <th onclick="setBatchSort('C')" style="cursor:pointer;user-select:none">C° <span id="sort-C"></span></th>
+              <th onclick="setBatchSort('A')" style="cursor:pointer;user-select:none">A° <span id="sort-A"></span></th>
+              <th onclick="setBatchSort('machining')" style="cursor:pointer;user-select:none">Machining <span id="sort-machining"></span></th>
+              <th onclick="setBatchSort('clearance')" style="cursor:pointer;user-select:none">Clearance <span id="sort-clearance"></span></th>
             </tr></thead>
             <tbody id="batch-tbody"></tbody>
           </table>
@@ -627,17 +651,11 @@
     <!-- Adjusted Plane -->
     <div class="section hidden" id="sec-adjusted">
       <div class="section-header" onclick="toggleSection('sec-adjusted')">
-        <h2>Adjusted Plane</h2>
+        <h2>Adjusted Planes</h2>
         <button class="btn btn-secondary" id="btn-show-adj3d" onclick="toggleAdjusted3D(event)" style="font-size:9px;padding:2px 8px;margin-left:auto;margin-right:8px">SHOW 3D</button>
         <span class="toggle">&#9660;</span>
       </div>
-      <div class="section-body">
-        <div id="adjusted-info"></div>
-        <div class="matrix-output" id="adjusted-output">
-          <button class="copy-btn" onclick="copyAdjusted()">COPY</button>
-          <span id="adjusted-text"></span>
-        </div>
-      </div>
+      <div class="section-body" id="adjusted-body"></div>
     </div>
 
     <!-- Error display -->
@@ -653,7 +671,7 @@
       border:1px solid var(--border);border-radius:3px;padding:2px 8px;cursor:pointer;
       user-select:none">Machining &#9656;</div>
     <div id="arc-gauge-info" style="position:absolute;top:10px;left:180px;z-index:100;display:none;
-      pointer-events:none;font-family:'JetBrains Mono',Consolas,monospace;font-size:11px;
+      pointer-events:auto;font-family:'JetBrains Mono',Consolas,monospace;font-size:11px;
       color:var(--text-dim);display:flex;gap:16px"></div>
     <div id="status-badges" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);
       z-index:100;display:none;gap:12px;pointer-events:none;
@@ -832,8 +850,12 @@ let batchResults = [];   // per-plane calc results
 let batchActiveIdx = -1; // currently viewed plane index
 let planeOverrides = {}; // { index: { zFeature, zStone } }
 let batchFilter = 'all'; // 'all', 'problems', 'used'
+let batchSortCol = 'status'; // 'status','name','C','A','machining','clearance'
+let batchSortAsc = true;
+let batchStatusBasis = 'both'; // 'mach', 'clr', or 'both'
 let batchRawText = '';   // original full batch text for re-calculation
 let showAdjusted3D = false; // toggle for adjusted vector in 3D scene
+let adjSelectedTab = 'mach'; // which adjusted plane is selected: 'mach' or 'clr'
 let arcGaugeMode = 1;       // 0=clearance, 1=machining
 let lastGaugeArgs = null;   // cached args for re-draw on mode toggle
 let showGhostTool = true;   // toggle for Tool Max Z (upper Z limit)
@@ -841,8 +863,8 @@ let showReachTool = true;   // toggle for Tool Min Z (lower Z limit)
 let colorblindMode = false;
 
 // ─── Color accessor system ───
-const COLORS_NORMAL = { green: '#00ff88', red: '#ff4444', amber: '#ffaa00', blue: '#58a6ff', orange: '#ff6b35' };
-const COLORS_CB     = { green: '#0072B2', red: '#D55E00', amber: '#F0E442', blue: '#CC79A7', orange: '#E8751A' };
+const COLORS_NORMAL = { green: '#00ff88', red: '#ff4444', amber: '#ffaa00', blue: '#58a6ff', orange: '#ff6b35', warn: '#ff8c00' };
+const COLORS_CB     = { green: '#0072B2', red: '#D55E00', amber: '#F0E442', blue: '#CC79A7', orange: '#E8751A', warn: '#E8751A' };
 function SC(name) { return (colorblindMode ? COLORS_CB : COLORS_NORMAL)[name]; }
 function SCrgba(name, alpha) {
   const hex = SC(name);
@@ -869,6 +891,10 @@ function applyColorMode() {
   s.setProperty('--amber-bg15', SCrgba('amber', 0.15));
   s.setProperty('--amber-bg12', SCrgba('amber', 0.12));
   s.setProperty('--amber-border', SCrgba('amber', 0.3));
+  s.setProperty('--warn', c.warn);
+  s.setProperty('--warn-bg15', SCrgba('warn', 0.25));
+  s.setProperty('--warn-bg12', SCrgba('warn', 0.2));
+  s.setProperty('--warn-border', SCrgba('warn', 0.45));
 }
 
 // ═══════════════════════════════════════════════════
@@ -911,6 +937,61 @@ function calcCMin(zRef, zLimit, toolLen) {
   if (ratio >= 1) return null; // always OK, no tilt constraint
   if (ratio <= -1) return Math.PI; // impossible
   return Math.acos(ratio);
+}
+
+// Solve R*sin(C) + L*cos(C) <= D for the safe C range in [0, π/2].
+// Returns { cMin, cMax, impossible }:
+//   cMin: minimum safe C (null if C=0 is safe — no minimum tilt needed)
+//   cMax: maximum safe C (null if C=90° is safe — no max tilt limit from this constraint)
+//   impossible: true if no angle in [0, 90°] satisfies the constraint
+// When R=0, behaves identically to calcCMin (traditional single-threshold).
+function calcConstraint(zRef, zLimit, toolLen, toolRadius) {
+  const D = zRef - zLimit;
+  const R = toolRadius || 0;
+  const L = toolLen;
+  const halfPi = Math.PI / 2;
+
+  if (R <= 0) {
+    // No radius — traditional: f(C) = L*cos(C), safe when C >= acos(D/L)
+    const cMin = calcCMin(zRef, zLimit, toolLen);
+    if (cMin === null) return { cMin: null, cMax: null, impossible: false };
+    if (cMin > halfPi) return { cMin: null, cMax: null, impossible: true };
+    return { cMin, cMax: null, impossible: false };
+  }
+
+  const peak = Math.sqrt(R * R + L * L);
+
+  // All safe: budget exceeds peak of f(C)
+  if (D >= peak) return { cMin: null, cMax: null, impossible: false };
+  // Impossible: budget <= 0
+  if (D <= 0) return { cMin: null, cMax: null, impossible: true };
+
+  // Check endpoints: f(0) = L, f(90°) = R
+  const ok0  = (L <= D);   // C=0° safe?
+  const ok90 = (R <= D);   // C=90° safe?
+
+  // Solve boundary: R*sin(C) + L*cos(C) = D
+  // Rewrite as sqrt(R²+L²) * sin(C + φ) = D where φ = atan(L/R)
+  const phi = Math.atan2(L, R);
+  const sinVal = Math.min(1, D / peak);
+  const alpha = Math.asin(sinVal);
+  const C1 = Math.max(0, Math.min(halfPi, alpha - phi));
+  const C2 = Math.max(0, Math.min(halfPi, Math.PI - alpha - phi));
+
+  if (ok0 && ok90) {
+    // Both ends safe — dead zone in the middle [C1, C2]
+    if (C1 >= C2) return { cMin: null, cMax: null, impossible: false }; // no real dead zone
+    return { cMin: null, cMax: C1, impossible: false }; // safe 0→C1, then dead zone
+  } else if (ok0 && !ok90) {
+    // Low angles safe up to C1
+    return { cMin: null, cMax: C1, impossible: false };
+  } else if (!ok0 && ok90) {
+    // High angles safe from C2 up — traditional case
+    return { cMin: C2, cMax: null, impossible: false };
+  } else {
+    // Neither end safe
+    return { cMin: null, cMax: null, impossible: true };
+  }
 }
 
 function reconstructMatrix(originalMatrix, newNormal) {
@@ -1071,27 +1152,10 @@ window.calculate = function() {
       bindingSource = 'part clearance level';
     }
 
-    showAnalysis({
-      zLimit, C, A,
-      zPivotFeature, featureOk, cMinFeature,
-      zPivotStone, stoneOk, cMinStone,
-      cMinBinding, bindingSource,
-      zLowerLimit, reachable, cMaxReach,
-      warnTolerance,
-    });
-
-    // Adjusted plane — only when current angle doesn't clear limits
-    let adjustedData = null;
-    if (!isOk && cMinBinding !== null) {
-      let targetC = cMinBinding;
-
-      // Ensure target C is at least C_min
-      if (cMinBinding !== null && targetC < cMinBinding) {
-        targetC = cMinBinding;
-      }
-
+    // Adjusted planes — separate for machining and clearance, with safety margin
+    // Helper to build adjusted plane data at a target C angle
+    function buildAdjusted(targetC, suffix) {
       targetC = Math.max(0, Math.min(Math.PI / 2, targetC));
-
       const newNormal = [
         Math.sin(targetC) * Math.cos(A),
         Math.sin(targetC) * Math.sin(A),
@@ -1106,34 +1170,72 @@ window.calculate = function() {
       const newZPivotStone = (newZStoneEff !== null) ? calcZPivot(newZStoneEff, toolLen, targetC) : null;
       const newStoneOk = (newZPivotStone !== null) ? newZPivotStone >= zLimit : null;
       const newReachable = (zLowerLimit !== null) ? newZPivotFeature <= zLowerLimit : null;
-
-      adjustedData = {
-        C: targetC,
-        A: A,
-        normal: newNormal,
-        matrix: newMatrix,
-        origin: plane.origin,
-        name: plane.name ? plane.name + ' (adjusted)' : 'Adjusted',
-        zPivotFeature: newZPivotFeature,
-        featureOk: newFeatureOk,
-        zPivotStone: newZPivotStone,
-        stoneOk: newStoneOk,
+      return {
+        C: targetC, A, normal: newNormal, matrix: newMatrix, origin: plane.origin,
+        name: plane.name ? plane.name + ' (' + suffix + ')' : suffix,
+        zPivotFeature: newZPivotFeature, featureOk: newFeatureOk,
+        zPivotStone: newZPivotStone, stoneOk: newStoneOk,
         reachable: newReachable,
         isOk: newFeatureOk && (newStoneOk === null || newStoneOk) && (newReachable === null || newReachable),
       };
-
-      showAdjusted(adjustedData, C);
-    } else {
-      document.getElementById('sec-adjusted').classList.add('hidden');
     }
 
-    // Save state for 3D
+    // Compute safe targets (shifted limit includes safety margin)
+    const safeZLimit = zLimit + warnTolerance;
+    let cTargetMach = null;
+    if (useRadiusMode) {
+      const cSafe = calcConstraint(zFeature, safeZLimit, toolLen, toolRadius);
+      // Use cMin if angle too low, cMax if angle too high (large-radius dead zone)
+      if (cSafe.cMin !== null) cTargetMach = cSafe.cMin;
+      else if (cSafe.cMax !== null) cTargetMach = cSafe.cMax;
+    } else {
+      cTargetMach = calcCMin(zFeature, safeZLimit, toolLen);
+    }
+    let cTargetClr = null;
+    if (zStone !== null) {
+      const cSafeClr = calcConstraint(zStone, safeZLimit, toolLen, toolRadius);
+      if (cSafeClr.cMin !== null) cTargetClr = cSafeClr.cMin;
+      else if (cSafeClr.cMax !== null) cTargetClr = cSafeClr.cMax;
+    }
+
+    let adjustedMach = null, adjustedClr = null, adjustedData = null;
+    if (!featureOk && cTargetMach !== null) {
+      adjustedMach = buildAdjusted(cTargetMach, 'adj. machining');
+    }
+    if (stoneOk === false && cTargetClr !== null) {
+      adjustedClr = buildAdjusted(cTargetClr, 'adj. clearance');
+    }
+
+    // Pick binding (stricter) as the primary adjusted data for 3D
+    if (adjustedMach && adjustedClr) {
+      adjustedData = adjustedMach.C >= adjustedClr.C ? adjustedMach : adjustedClr;
+    } else {
+      adjustedData = adjustedMach || adjustedClr || null;
+    }
+
+    // Save state for 3D (before showAnalysis so gauge button can access adjusted data)
     currentState = {
       plane, A, C, zFeature, zLimit, toolLen, toolRadius, machMode, zStone, partHeight,
       zPivotFeature, featureOk, zPivotStone, stoneOk,
       zLowerLimit, reachable, cMaxReach,
-      isOk, cMinBinding, adjusted: adjustedData
+      isOk, cMinBinding, adjusted: adjustedData,
+      adjustedMach, adjustedClr
     };
+
+    showAnalysis({
+      zLimit, C, A,
+      zPivotFeature, featureOk, cMinFeature,
+      zPivotStone, stoneOk, cMinStone,
+      cMinBinding, bindingSource,
+      zLowerLimit, reachable, cMaxReach,
+      warnTolerance,
+    });
+
+    if (adjustedMach || adjustedClr) {
+      showAdjusted(adjustedMach, adjustedClr, C, zLimit);
+    } else {
+      document.getElementById('sec-adjusted').classList.add('hidden');
+    }
 
     updateScene();
     saveSettings();
@@ -1153,6 +1255,9 @@ window.calculate = function() {
 // MANUAL MODE — CONSTRAINT ANGLE CALCULATOR
 // ═══════════════════════════════════════════════════
 function toggleManualMode(enabled) {
+  // Sync toggle switch appearance
+  document.getElementById('mode-opt-file').classList.toggle('active', !enabled);
+  document.getElementById('mode-opt-manual').classList.toggle('active', enabled);
   const fileRow = document.getElementById('file-picker-row');
   const manualLabel = document.getElementById('manual-mode-label');
   const refreshBtn = document.getElementById('btn-refresh-file');
@@ -1219,20 +1324,20 @@ window.calculateManual = function calculateManual() {
     const clearanceHeight = clearanceHeightVal ? parseFloat(clearanceHeightVal) : null;
     const zStone = (partHeight !== null && clearanceHeight !== null) ? -(partHeight + clearanceHeight) : null;
 
-    // Constraint angles (same math as main calculate)
-    const cMinFeatureRef = useRadiusMode ? zFeature - toolRadius : zFeature;
+    // Constraint angles — use radius-aware math in radius mode
     const halfPi = Math.PI / 2;
-    const cMinFeatureRaw = calcCMin(cMinFeatureRef, zLimit, toolLen);
-    const cMinStoneRaw = (zStone !== null) ? calcCMin(zStone - toolRadius, zLimit, toolLen) : null;
+    const featureC = calcConstraint(zFeature, zLimit, toolLen, useRadiusMode ? toolRadius : 0);
+    const stoneC = (zStone !== null) ? calcConstraint(zStone, zLimit, toolLen, toolRadius) : null;
+    // Reachability: use calcCMin (traditional) since reachability is about CoR Z position
+    const cMinFeatureRef = useRadiusMode ? zFeature - toolRadius : zFeature;
     const cMaxReachRaw = (zLowerLimit !== null) ? calcCMin(cMinFeatureRef, zLowerLimit, toolLen) : null;
 
-    // Interpret: angles > 90° are physically impossible (machine can't tilt past 90°)
-    // cMinFeature/cMinStone > 90° → impossible to satisfy at any angle
-    // cMaxReach > 90° → reachability is never an issue (treat as no constraint)
-    const featureImpossible = cMinFeatureRaw !== null && cMinFeatureRaw > halfPi;
-    const stoneImpossible = cMinStoneRaw !== null && cMinStoneRaw > halfPi;
-    const cMinFeature = featureImpossible ? null : cMinFeatureRaw;
-    const cMinStone = stoneImpossible ? null : cMinStoneRaw;
+    const featureImpossible = featureC.impossible;
+    const stoneImpossible = stoneC !== null && stoneC.impossible;
+    const cMinFeature = featureC.cMin;
+    const cMaxFeature = featureC.cMax; // max safe C (new — for low-angle-safe cases)
+    const cMinStone = stoneC !== null ? stoneC.cMin : null;
+    const cMaxStone = stoneC !== null ? stoneC.cMax : null; // max safe C for clearance
     const cMaxReach = (cMaxReachRaw !== null && cMaxReachRaw > halfPi) ? null : cMaxReachRaw;
 
     // Warning tolerance
@@ -1240,15 +1345,16 @@ window.calculateManual = function calculateManual() {
     const wt = warnToleranceVal ? parseFloat(warnToleranceVal) : 20;
 
     // Warning angles: where Z margin = warnTolerance (shift limit by wt)
-    let cWarnFeatureRaw = (cMinFeatureRaw !== null) ? calcCMin(cMinFeatureRef, zLimit - wt, toolLen) : null;
-    let cWarnStoneRaw = (cMinStoneRaw !== null) ? calcCMin(zStone - toolRadius, zLimit - wt, toolLen) : null;
+    const featureWarnC = calcConstraint(zFeature, zLimit - wt, toolLen, useRadiusMode ? toolRadius : 0);
+    const stoneWarnC = (zStone !== null) ? calcConstraint(zStone, zLimit - wt, toolLen, toolRadius) : null;
     let cWarnReachRaw = (cMaxReachRaw !== null && zLowerLimit !== null) ? calcCMin(cMinFeatureRef, zLowerLimit + wt, toolLen) : null;
-    // Clamp warning angles >90° to null (warning zone extends to full range)
-    const cWarnFeature = (cWarnFeatureRaw !== null && cWarnFeatureRaw <= halfPi) ? cWarnFeatureRaw : null;
-    const cWarnStone = (cWarnStoneRaw !== null && cWarnStoneRaw <= halfPi) ? cWarnStoneRaw : null;
+    const cWarnFeature = (!featureWarnC.impossible && featureWarnC.cMin !== null && featureWarnC.cMin <= halfPi) ? featureWarnC.cMin : null;
+    const cWarnFeatureMax = (!featureWarnC.impossible && featureWarnC.cMax !== null) ? featureWarnC.cMax : null;
+    const cWarnStone = (stoneWarnC && !stoneWarnC.impossible && stoneWarnC.cMin !== null && stoneWarnC.cMin <= halfPi) ? stoneWarnC.cMin : null;
+    const cWarnStoneMax = (stoneWarnC && !stoneWarnC.impossible && stoneWarnC.cMax !== null) ? stoneWarnC.cMax : null;
     const cWarnReach = (cWarnReachRaw !== null && cWarnReachRaw <= halfPi) ? cWarnReachRaw : null;
 
-    // Binding constraint (whichever requires more tilt)
+    // Binding constraint (whichever requires more tilt for cMin, or less tilt for cMax)
     let cMinBinding = null;
     let bindingSource = '';
     if (cMinFeature !== null && cMinStone !== null) {
@@ -1257,26 +1363,41 @@ window.calculateManual = function calculateManual() {
     } else if (cMinFeature !== null) { cMinBinding = cMinFeature; bindingSource = 'machining'; }
     else if (cMinStone !== null) { cMinBinding = cMinStone; bindingSource = 'part clearance'; }
 
+    // Max binding: lowest cMax across constraints
+    let cMaxBinding = null;
+    let cMaxBindingSource = '';
+    if (cMaxFeature !== null && cMaxStone !== null) {
+      if (cMaxStone < cMaxFeature) { cMaxBinding = cMaxStone; cMaxBindingSource = 'part clearance'; }
+      else { cMaxBinding = cMaxFeature; cMaxBindingSource = 'machining'; }
+    } else if (cMaxFeature !== null) { cMaxBinding = cMaxFeature; cMaxBindingSource = 'machining'; }
+    else if (cMaxStone !== null) { cMaxBinding = cMaxStone; cMaxBindingSource = 'part clearance'; }
+
     // Binding warning (largest warning angle from steepest constraints)
     const cWarnBinding = Math.max(cWarnFeature || 0, cWarnStone || 0) || null;
 
     // Display results
     displayManualResults(cMinFeature, cMinStone, cMaxReach, cMinBinding, bindingSource,
       featureImpossible, stoneImpossible, zLowerLimit,
-      cWarnFeature, cWarnStone, cWarnReach, cWarnBinding, wt);
+      cWarnFeature, cWarnStone, cWarnReach, cWarnBinding, wt,
+      cMaxFeature, cMaxStone, cMaxBinding, cMaxBindingSource,
+      cWarnFeatureMax, cWarnStoneMax);
 
-    // Draw arc gauge (no current C needle) — pass warning angles
-    drawArcGauge(null, 0, 90, cMinFeature !== null ? toDeg(cMinFeature) : null,
-      cMinStone !== null ? toDeg(cMinStone) : null,
+    // Arc gauge: for steepest constraint, use cMin if available, otherwise use cMax
+    const gaugeMinFeature = cMinFeature !== null ? toDeg(cMinFeature) : null;
+    const gaugeMinStone = cMinStone !== null ? toDeg(cMinStone) : null;
+    // For max constraints, pass as negative cMin to drawArcGauge? No — let arc gauge handle cMax
+    drawArcGauge(null, 0, 90, gaugeMinFeature,
+      gaugeMinStone,
       cMaxReach !== null ? toDeg(cMaxReach) : null,
       null, null, null, null, null, null,
       cWarnFeature !== null ? toDeg(cWarnFeature) : null,
       cWarnStone !== null ? toDeg(cWarnStone) : null,
-      cWarnReach !== null ? toDeg(cWarnReach) : null);
+      cWarnReach !== null ? toDeg(cWarnReach) : null,
+      cMaxFeature, cMaxStone);
 
-    // Update 3D scene (only pass valid angles for tool rendering)
+    // Update 3D scene
     manualState = { zFeature, zLimit, toolLen, toolRadius, machMode, zStone, partHeight,
-      zLowerLimit, cMinFeature, cMinStone, cMaxReach, useRadiusMode };
+      zLowerLimit, cMinFeature, cMinStone, cMaxReach, cMaxFeature, cMaxStone, useRadiusMode };
     updateManualScene();
 
     // Hide plane-specific sections and status badges
@@ -1297,7 +1418,9 @@ let manualState = null;
 
 function displayManualResults(cMinFeature, cMinStone, cMaxReach, cMinBinding, bindingSource,
     featureImpossible, stoneImpossible, zLowerLimit,
-    cWarnFeature, cWarnStone, cWarnReach, cWarnBinding, wt) {
+    cWarnFeature, cWarnStone, cWarnReach, cWarnBinding, wt,
+    cMaxFeature, cMaxStone, cMaxBinding, cMaxBindingSource,
+    cWarnFeatureMax, cWarnStoneMax) {
   const sec = document.getElementById('sec-results');
   sec.classList.remove('hidden');
 
@@ -1321,13 +1444,27 @@ function displayManualResults(cMinFeature, cMinStone, cMaxReach, cMinBinding, bi
   let cardsHtml = '';
 
   // Machining constraint card
+  const cMaxFDeg = cMaxFeature != null ? toDeg(cMaxFeature) : null;
+  const cWarnFMaxDeg = cWarnFeatureMax != null ? toDeg(cWarnFeatureMax) : null;
   if (cMinFDeg !== null) {
     const isBinding = bindingSource === 'machining';
     const warnZoneF = (cWarnFDeg !== null && cWarnFDeg > cMinFDeg) ?
-      `<div style="font-size:8px;color:var(--orange);margin-top:3px;opacity:0.8">\u26A0 ${cMinFDeg.toFixed(1)}\u00B0\u2013${cWarnFDeg.toFixed(1)}\u00B0 within ${wt}mm safety margin</div>` : '';
+      `<div style="font-size:8px;color:var(--warn);margin-top:3px;opacity:0.8">\u26A0 ${cMinFDeg.toFixed(1)}\u00B0\u2013${cWarnFDeg.toFixed(1)}\u00B0 within ${wt}mm safety margin</div>` : '';
     cardsHtml += `<div style="flex:1;background:${SCrgba('amber', 0.12)};border:1px solid ${SCrgba('amber', 0.3)};border-radius:6px;padding:8px 10px;text-align:center">
       <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--amber);margin-bottom:4px">Steepest (machining)</div>
       <div style="font-size:22px;font-weight:700;color:var(--amber)">${cMinFDeg.toFixed(1)}\u00B0</div>
+      ${isBinding ? '<div style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:var(--amber);margin-top:2px">BINDING</div>' : ''}
+      ${warnZoneF}
+    </div>`;
+  } else if (cMaxFDeg !== null) {
+    // Low-angle safe: C=0 is OK, max safe angle shown
+    const isBinding = cMaxBindingSource === 'machining';
+    const warnZoneF = (cWarnFMaxDeg !== null && cWarnFMaxDeg < cMaxFDeg) ?
+      `<div style="font-size:8px;color:var(--warn);margin-top:3px;opacity:0.8">\u26A0 ${cWarnFMaxDeg.toFixed(1)}\u00B0\u2013${cMaxFDeg.toFixed(1)}\u00B0 within ${wt}mm safety margin</div>` : '';
+    cardsHtml += `<div style="flex:1;background:${SCrgba('amber', 0.12)};border:1px solid ${SCrgba('amber', 0.3)};border-radius:6px;padding:8px 10px;text-align:center">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--amber);margin-bottom:4px">Max safe (machining)</div>
+      <div style="font-size:22px;font-weight:700;color:var(--amber)">${cMaxFDeg.toFixed(1)}\u00B0</div>
+      <div style="font-size:8px;color:var(--text-dim);margin-top:2px">Safe from 0\u00B0 to ${cMaxFDeg.toFixed(1)}\u00B0</div>
       ${isBinding ? '<div style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:var(--amber);margin-top:2px">BINDING</div>' : ''}
       ${warnZoneF}
     </div>`;
@@ -1340,13 +1477,27 @@ function displayManualResults(cMinFeature, cMinStone, cMaxReach, cMinBinding, bi
   }
 
   // Part clearance constraint card
+  const cMaxSDeg = cMaxStone != null ? toDeg(cMaxStone) : null;
+  const cWarnSMaxDeg = cWarnStoneMax != null ? toDeg(cWarnStoneMax) : null;
   if (cMinSDeg !== null) {
     const isBinding = bindingSource === 'part clearance';
     const warnZoneS = (cWarnSDeg !== null && cWarnSDeg > cMinSDeg) ?
-      `<div style="font-size:8px;color:var(--orange);margin-top:3px;opacity:0.8">\u26A0 ${cMinSDeg.toFixed(1)}\u00B0\u2013${cWarnSDeg.toFixed(1)}\u00B0 within ${wt}mm safety margin</div>` : '';
+      `<div style="font-size:8px;color:var(--warn);margin-top:3px;opacity:0.8">\u26A0 ${cMinSDeg.toFixed(1)}\u00B0\u2013${cWarnSDeg.toFixed(1)}\u00B0 within ${wt}mm safety margin</div>` : '';
     cardsHtml += `<div style="flex:1;background:${SCrgba('blue', 0.12)};border:1px solid ${SCrgba('blue', 0.3)};border-radius:6px;padding:8px 10px;text-align:center">
       <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:4px">Steepest (clearance)</div>
       <div style="font-size:22px;font-weight:700;color:var(--blue)">${cMinSDeg.toFixed(1)}\u00B0</div>
+      ${isBinding ? '<div style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-top:2px">BINDING</div>' : ''}
+      ${warnZoneS}
+    </div>`;
+  } else if (cMaxSDeg !== null) {
+    // Low-angle safe for clearance
+    const isBinding = cMaxBindingSource === 'part clearance';
+    const warnZoneS = (cWarnSMaxDeg !== null && cWarnSMaxDeg < cMaxSDeg) ?
+      `<div style="font-size:8px;color:var(--warn);margin-top:3px;opacity:0.8">\u26A0 ${cWarnSMaxDeg.toFixed(1)}\u00B0\u2013${cMaxSDeg.toFixed(1)}\u00B0 within ${wt}mm safety margin</div>` : '';
+    cardsHtml += `<div style="flex:1;background:${SCrgba('blue', 0.12)};border:1px solid ${SCrgba('blue', 0.3)};border-radius:6px;padding:8px 10px;text-align:center">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:4px">Max safe (clearance)</div>
+      <div style="font-size:22px;font-weight:700;color:var(--blue)">${cMaxSDeg.toFixed(1)}\u00B0</div>
+      <div style="font-size:8px;color:var(--text-dim);margin-top:2px">Safe from 0\u00B0 to ${cMaxSDeg.toFixed(1)}\u00B0</div>
       ${isBinding ? '<div style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-top:2px">BINDING</div>' : ''}
       ${warnZoneS}
     </div>`;
@@ -1361,7 +1512,7 @@ function displayManualResults(cMinFeature, cMinStone, cMaxReach, cMinBinding, bi
   // Reachability constraint card
   if (cMaxRDeg !== null) {
     const warnZoneR = (cWarnRDeg !== null && cWarnRDeg < cMaxRDeg) ?
-      `<div style="font-size:8px;color:var(--orange);margin-top:3px;opacity:0.8">\u26A0 ${cWarnRDeg.toFixed(1)}\u00B0\u2013${cMaxRDeg.toFixed(1)}\u00B0 within ${wt}mm safety margin</div>` : '';
+      `<div style="font-size:8px;color:var(--warn);margin-top:3px;opacity:0.8">\u26A0 ${cWarnRDeg.toFixed(1)}\u00B0\u2013${cMaxRDeg.toFixed(1)}\u00B0 within ${wt}mm safety margin</div>` : '';
     cardsHtml += `<div style="flex:1;background:${SCrgba('green', 0.12)};border:1px solid ${SCrgba('green', 0.3)};border-radius:6px;padding:8px 10px;text-align:center">
       <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:4px">Shallowest (reachable)</div>
       <div style="font-size:22px;font-weight:700;color:var(--green)">${cMaxRDeg.toFixed(1)}\u00B0</div>
@@ -1378,38 +1529,26 @@ function displayManualResults(cMinFeature, cMinStone, cMaxReach, cMinBinding, bi
   // Details: safe range summary
   const detailsEl = document.getElementById('result-details');
   let detailHtml = '';
+  const cMaxBDeg = cMaxBinding != null ? toDeg(cMaxBinding) : null;
+
+  // Determine effective safe range bounds
+  const rangeLow = cMinBDeg !== null ? cMinBDeg : 0;
+  const rangeHigh = Math.min(
+    cMaxBDeg !== null ? cMaxBDeg : 90,
+    cMaxRDeg !== null ? cMaxRDeg : 90
+  );
+
   if (featureImpossible || stoneImpossible) {
     detailHtml = `<div style="text-align:center;padding:6px 0;font-size:13px;color:var(--red);font-weight:700">
       No safe C range \u2014 ${featureImpossible ? 'machining level' : 'part clearance'} impossible at any angle
     </div>`;
-  } else if (cMinBDeg !== null && cMaxRDeg !== null) {
-    if (cMinBDeg <= cMaxRDeg) {
-      const comfortLow = cWarnBDeg !== null ? cWarnBDeg : cMinBDeg;
-      const comfortHigh = cWarnRDeg !== null ? cWarnRDeg : cMaxRDeg;
-      const hasComfort = comfortLow > cMinBDeg || comfortHigh < cMaxRDeg;
-      detailHtml = `<div style="text-align:center;padding:6px 0;font-size:13px;color:var(--text)">
-        Safe C range: <span style="font-weight:700;color:var(--green)">${cMinBDeg.toFixed(1)}\u00B0 \u2013 ${cMaxRDeg.toFixed(1)}\u00B0</span>
-      </div>`;
-      if (hasComfort && comfortLow <= comfortHigh) {
-        detailHtml += `<div style="text-align:center;padding:2px 0;font-size:11px;color:var(--text-dim)">
-          With ${wt}mm safety margin: <span style="color:var(--green)">${comfortLow.toFixed(1)}\u00B0 \u2013 ${comfortHigh.toFixed(1)}\u00B0</span>
-        </div>`;
-      } else if (hasComfort) {
-        detailHtml += `<div style="text-align:center;padding:2px 0;font-size:11px;color:var(--orange)">
-          Entire safe range is within ${wt}mm safety margin
-        </div>`;
-      }
-    } else {
-      detailHtml = `<div style="text-align:center;padding:6px 0;font-size:13px;color:var(--red);font-weight:700">
-        No safe C range \u2014 steepest constraint (${cMinBDeg.toFixed(1)}\u00B0) exceeds shallowest reachable (${cMaxRDeg.toFixed(1)}\u00B0)
-      </div>`;
-    }
-  } else if (cMinBDeg !== null) {
-    const reason = zLowerLimit !== null
-      ? 'no shallow angle limit (tool can reach at all angles)'
-      : 'no shallow angle limit (Z travel not set)';
+  } else if (rangeLow <= rangeHigh && (cMinBDeg !== null || cMaxBDeg !== null || cMaxRDeg !== null)) {
     detailHtml = `<div style="text-align:center;padding:6px 0;font-size:13px;color:var(--text)">
-      Min C: <span style="font-weight:700">${cMinBDeg.toFixed(1)}\u00B0</span> \u2014 ${reason}
+      Safe C range: <span style="font-weight:700;color:var(--green)">${rangeLow.toFixed(1)}\u00B0 \u2013 ${rangeHigh.toFixed(1)}\u00B0</span>
+    </div>`;
+  } else if (rangeLow > rangeHigh) {
+    detailHtml = `<div style="text-align:center;padding:6px 0;font-size:13px;color:var(--red);font-weight:700">
+      No safe C range \u2014 constraints overlap
     </div>`;
   } else {
     detailHtml = `<div style="text-align:center;padding:6px 0;font-size:13px;color:var(--green)">
@@ -1445,31 +1584,48 @@ function updateManualScene() {
 
   // Build tool vectors at each constraint angle (A=0 for clean side view)
   const radiusOffset = (cAngle) => s.toolRadius * Math.sin(cAngle);
+  const corBallRadius = sceneScale * 0.025;
 
-  if (s.cMinFeature !== null) {
-    const C = s.cMinFeature;
+  // Helper: add a CoR ball at the pivot position
+  function addCorBall(pivotPos, color, key) {
+    const geo = new THREE.SphereGeometry(corBallRadius, 16, 16);
+    const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.5, depthTest: false });
+    const ball = new THREE.Mesh(geo, mat);
+    ball.position.copy(pivotPos);
+    scene.add(ball);
+    sceneObjects[key] = ball;
+  }
+
+  // Machining constraint tool — use cMin or cMax depending on which applies
+  const featureAngle = s.cMinFeature !== null ? s.cMinFeature : s.cMaxFeature;
+  if (featureAngle != null) {
+    const C = featureAngle;
+    const label = s.cMinFeature !== null ? 'Steepest machining' : 'Max safe machining';
     const normal = [Math.sin(C), 0, Math.cos(C)];
     const rOff = s.useRadiusMode ? radiusOffset(C) : 0;
     buildToolVector(new THREE.Vector3(0, 0, 0), normal, s.toolLen, SChex('amber'), 'manualToolFeature', sceneScale, s.toolRadius, rOff || undefined);
-    // Label
     const dispDir = new THREE.Vector3(-normal[0], 0, -normal[2]).normalize();
     const pivotPos = dispDir.clone().multiplyScalar(-s.toolLen);
     pivotPos.z += rOff;
+    addCorBall(pivotPos, SChex('amber'), 'manualCorFeature');
     addLabel(pivotPos.clone().add(new THREE.Vector3(sceneScale * 0.05, 0, sceneScale * 0.05)),
-      `Steepest machining: ${toDeg(C).toFixed(1)}\u00B0`, 'label-amber');
+      `${label}: ${toDeg(C).toFixed(1)}\u00B0`, 'label-amber');
   }
 
-  if (s.cMinStone !== null) {
-    const C = s.cMinStone;
+  // Clearance constraint tool — use cMin or cMax
+  const stoneAngle = s.cMinStone !== null ? s.cMinStone : s.cMaxStone;
+  if (stoneAngle != null) {
+    const C = stoneAngle;
+    const label = s.cMinStone !== null ? 'Steepest clearance' : 'Max safe clearance';
     const normal = [Math.sin(C), 0, Math.cos(C)];
     const rOff = radiusOffset(C);
     const stoneDisplayZ = machineZToDisplay(s.zStone, fz);
-    // featureZOffset positions tool tip at stone level + radius offset
     buildToolVector(new THREE.Vector3(0, 0, 0), normal, s.toolLen, SChex('blue'), 'manualToolStone', sceneScale, s.toolRadius, stoneDisplayZ + rOff);
     const dispDir = new THREE.Vector3(-normal[0], 0, -normal[2]).normalize();
     const pivotPos = new THREE.Vector3(0, 0, stoneDisplayZ + rOff).add(dispDir.clone().multiplyScalar(-s.toolLen));
+    addCorBall(pivotPos, SChex('blue'), 'manualCorStone');
     addLabel(pivotPos.clone().add(new THREE.Vector3(sceneScale * 0.05, 0, -sceneScale * 0.05)),
-      `Steepest clearance: ${toDeg(C).toFixed(1)}\u00B0`, 'label-blue');
+      `${label}: ${toDeg(C).toFixed(1)}\u00B0`, 'label-blue');
   }
 
   if (s.cMaxReach !== null) {
@@ -1480,6 +1636,7 @@ function updateManualScene() {
     const dispDir = new THREE.Vector3(-normal[0], 0, -normal[2]).normalize();
     const pivotPos = dispDir.clone().multiplyScalar(-s.toolLen);
     pivotPos.z += rOff;
+    addCorBall(pivotPos, SChex('green'), 'manualCorReach');
     addLabel(pivotPos.clone().add(new THREE.Vector3(-sceneScale * 0.05, 0, sceneScale * 0.05)),
       `Shallowest reachable: ${toDeg(C).toFixed(1)}\u00B0`, 'label-green');
   }
@@ -1509,9 +1666,9 @@ function autoFrameManualCamera(s, sceneScale) {
   if (s.zStone !== null) {
     points.push(new THREE.Vector3(0, 0, machineZToDisplay(s.zStone, fz)));
   }
-  // Add tool tip positions for each constraint
-  [s.cMinFeature, s.cMinStone, s.cMaxReach].forEach(C => {
-    if (C !== null) {
+  // Add tool tip positions for each constraint (including cMax alternatives)
+  [s.cMinFeature, s.cMaxFeature, s.cMinStone, s.cMaxStone, s.cMaxReach].forEach(C => {
+    if (C != null) {
       const dispDir = new THREE.Vector3(-Math.sin(C), 0, -Math.cos(C));
       const pivot = dispDir.clone().multiplyScalar(-s.toolLen);
       points.push(pivot);
@@ -1595,11 +1752,11 @@ function showAnalysis(a) {
   }
   function badgeText(ok, failLabel, marginMm) {
     if (!ok) return `<span style="color:var(--red)">${failLabel}</span>`;
-    if (marginMm < wt) return `<span style="color:var(--orange)">CLOSE</span>`;
+    if (marginMm < wt) return `<span style="color:var(--warn)">CLOSE</span>`;
     return `<span style="color:var(--green)">OK</span>`;
   }
   function marginText(mm, ok) {
-    const col = !ok ? 'var(--red)' : (mm < wt ? 'var(--amber)' : 'var(--green)');
+    const col = !ok ? 'var(--red)' : (mm < wt ? 'var(--warn)' : 'var(--green)');
     return `<span style="color:${col}">${mm >= 0 ? '+' : ''}${mm.toFixed(1)} mm</span>`;
   }
 
@@ -1628,8 +1785,10 @@ function showAnalysis(a) {
   cardsEl.innerHTML = cardsHtml;
 
   // --- Arc gauge in 3D view ---
+  const clrMarginForGauge = (a.zPivotStone !== null) ? a.zPivotStone - a.zLimit : null;
   drawArcGauge(currentC, rangeMin, rangeMax, cMinFeatureDeg, cMinStoneDeg, cMaxReachDeg,
-    currentA, a.featureOk, a.stoneOk, a.reachable, machMargin, reachMargin);
+    currentA, a.featureOk, a.stoneOk, a.reachable, machMargin, reachMargin,
+    undefined, undefined, undefined, undefined, undefined, clrMarginForGauge);
 
   // --- Status badges in 3D view ---
   const badgesEl = document.getElementById('status-badges');
@@ -1640,10 +1799,10 @@ function showAnalysis(a) {
     const clrBox = document.getElementById('badge-clearance-box');
     if (a.zPivotStone !== null) {
       const clrM = a.zPivotStone - a.zLimit;
-      const clrKey = !a.stoneOk ? 'red' : (clrM < wt ? 'orange' : 'green');
+      const clrKey = !a.stoneOk ? 'red' : (clrM < wt ? 'warn' : 'green');
       const clrText = !a.stoneOk ? 'EXCEEDED' : (clrM < wt ? 'CLOSE TO LIMIT' : 'OK');
       clrBox.textContent = clrText;
-      clrBox.style.background = SCrgba(clrKey, 0.35);
+      clrBox.style.background = SCrgba(clrKey, 0.55);
       clrBox.style.color = '#fff';
       document.getElementById('badge-clearance').style.display = '';
     } else {
@@ -1655,10 +1814,10 @@ function showAnalysis(a) {
 
     // Machining badge box
     const machBox = document.getElementById('badge-machining-box');
-    const machKey = !machOk ? 'red' : (machWorstMargin < wt ? 'orange' : 'green');
+    const machKey = !machOk ? 'red' : (machWorstMargin < wt ? 'warn' : 'green');
     const machText = !machOk ? machFailLabel : (machWorstMargin < wt ? 'CLOSE TO LIMIT' : 'OK');
     machBox.textContent = machText;
-    machBox.style.background = SCrgba(machKey, 0.35);
+    machBox.style.background = SCrgba(machKey, 0.55);
     machBox.style.color = '#fff';
   }
 
@@ -1669,7 +1828,7 @@ function showAnalysis(a) {
   // Helper for C_min/C_max detail line
   function cLimitLine(label, cDeg, delta) {
     if (cDeg === null) return '';
-    const dClass = delta > 5 ? 'color-green' : (delta >= 0 ? 'color-amber' : 'color-red');
+    const dClass = delta > 5 ? 'color-green' : (delta >= 0 ? 'color-warn' : 'color-red');
     return `<span class="lbl">${label}:</span><span class="val">${cDeg.toFixed(2)}&deg; <span class="${dClass}">(${delta >= 0 ? '+' : ''}${delta.toFixed(2)}&deg;)</span></span>`;
   }
 
@@ -1726,15 +1885,15 @@ function showAnalysis(a) {
     </div>
     <div class="detail-body"><div class="result-grid">
       ${marginToZLimit !== null ? (() => {
-        const c = marginToZLimit > 5 ? 'color-green' : (marginToZLimit >= 0 ? 'color-amber' : 'color-red');
+        const c = marginToZLimit > 5 ? 'color-green' : (marginToZLimit >= 0 ? 'color-warn' : 'color-red');
         const lbl = a.bindingSource === 'part clearance level' ? 'C for part clearance' : 'C for machining';
         return `<span class="lbl">To ${lbl}:</span><span class="val ${c}">${marginToZLimit >= 0 ? '+' : ''}${marginToZLimit.toFixed(2)}&deg;</span>`;
       })() : ''}
       ${marginToReach !== null ? (() => {
-        const c = marginToReach > 5 ? 'color-green' : (marginToReach >= 0 ? 'color-amber' : 'color-red');
+        const c = marginToReach > 5 ? 'color-green' : (marginToReach >= 0 ? 'color-warn' : 'color-red');
         return `<span class="lbl">To C to reach mach.:</span><span class="val ${c}">${marginToReach >= 0 ? '+' : ''}${marginToReach.toFixed(2)}&deg;</span>`;
       })() : ''}
-      <span class="lbl">To C axis max (90&deg;):</span><span class="val ${marginToCAxis > 5 ? 'color-green' : 'color-amber'}">${marginToCAxis.toFixed(2)}&deg;</span>
+      <span class="lbl">To C axis max (90&deg;):</span><span class="val ${marginToCAxis > 5 ? 'color-green' : 'color-warn'}">${marginToCAxis.toFixed(2)}&deg;</span>
       <span class="lbl">Usable range:</span><span class="val">${rangeMin.toFixed(1)}&deg; &ndash; ${rangeMax.toFixed(1)}&deg; (${(rangeMax - rangeMin).toFixed(1)}&deg;)</span>
     </div></div>
   </div>`;
@@ -1786,11 +1945,13 @@ function buildAngleBar(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach) 
 
 function drawArcGauge(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
     currentA, featureOk, stoneOk, reachable, zMarginUpper, zMarginLower,
-    cWarnFeature, cWarnStone, cWarnReach) {
+    cWarnFeature, cWarnStone, cWarnReach,
+    cMaxFeature, cMaxStone, zMarginClr) {
   // Cache args so the toggle can re-draw without a new calculation
   lastGaugeArgs = [currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
     currentA, featureOk, stoneOk, reachable, zMarginUpper, zMarginLower,
-    cWarnFeature, cWarnStone, cWarnReach];
+    cWarnFeature, cWarnStone, cWarnReach,
+    cMaxFeature, cMaxStone, zMarginClr];
 
   const canvas = document.getElementById('arc-gauge');
   if (!canvas) return;
@@ -1849,14 +2010,28 @@ function drawArcGauge(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
   let machLow = 0;   // lower bound of green zone
   let machHigh = 90;  // upper bound of green zone
 
+  // Convert cMax constraints (radians) to degrees for gauge display
+  const cMaxFeatureDeg = (cMaxFeature != null) ? toDeg(cMaxFeature) : null;
+  const cMaxStoneDeg = (cMaxStone != null) ? toDeg(cMaxStone) : null;
+
   if (arcGaugeMode === 0) {
-    // Clearance: single constraint at cMinStone
-    machLow = (cMinStone !== null) ? cMinStone : 0;
-    machHigh = 90;
+    // Clearance mode
+    if (cMinStone !== null) {
+      machLow = cMinStone; // traditional: min tilt required
+    } else if (cMaxStoneDeg !== null) {
+      machLow = 0;         // low angles safe
+      machHigh = cMaxStoneDeg; // max safe angle
+    }
   } else {
-    // Machining: valid range is cMinFeature to cMaxReach
-    machLow = (cMinFeature !== null) ? cMinFeature : 0;
-    machHigh = (cMaxReach !== null) ? Math.min(cMaxReach, 90) : 90;
+    // Machining mode
+    if (cMinFeature !== null) {
+      machLow = cMinFeature; // traditional: min tilt required
+    } else if (cMaxFeatureDeg !== null) {
+      machLow = 0;           // low angles safe
+      machHigh = Math.min(cMaxFeatureDeg, (cMaxReach !== null) ? Math.min(cMaxReach, 90) : 90);
+    } else {
+      machHigh = (cMaxReach !== null) ? Math.min(cMaxReach, 90) : 90;
+    }
   }
 
   // Red zone below lower bound (CoR above upper Z limit / need more tilt)
@@ -1865,8 +2040,8 @@ function drawArcGauge(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
   if (machLow > 0) drawWedge(0, machLow, SCrgba('red', zoneAlpha));
   // Green zone (valid range)
   drawWedge(machLow, machHigh, SCrgba('green', zoneAlphaLight));
-  // Amber zone above upper bound (CoR below lower Z limit / too much tilt)
-  if (machHigh < 90) drawWedge(machHigh, 90, SCrgba('amber', zoneAlphaLight));
+  // Red zone above upper bound (exceeds max safe angle)
+  if (machHigh < 90) drawWedge(machHigh, 90, SCrgba('red', zoneAlpha));
 
   // Outer arc edge
   ctx.beginPath();
@@ -1917,16 +2092,19 @@ function drawArcGauge(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
 
   // Limit lines
   drawLimitLine(machLow, SC('red'));
-  if (machHigh < 90) drawLimitLine(machHigh, SC('amber'));
+  // Upper limit line: use identity color (amber for machining cMax, blue for clearance cMax, amber for reach)
+  const hasMaxConstraint = (arcGaugeMode === 0 && cMaxStoneDeg !== null) || (arcGaugeMode === 1 && cMaxFeatureDeg !== null);
+  const upperLineColor = hasMaxConstraint ? (arcGaugeMode === 0 ? SC('blue') : SC('amber')) : SC('amber');
+  if (machHigh < 90) drawLimitLine(machHigh, upperLineColor);
 
   // Needle for current C angle (skip in manual mode when currentC is null)
   if (currentC !== null) {
     const a = cToAngle(currentC);
     const inRange = currentC >= machLow && currentC <= machHigh;
-    // Only warn about approaching machHigh if it's a real constraint (cMaxReach), not the 90° axis limit
-    const hasUpperLimit = arcGaugeMode === 1 && cMaxReach !== null && cMaxReach < 90;
+    // Warn about approaching any real upper limit (cMaxReach or cMax constraint)
+    const hasUpperLimit = (arcGaugeMode === 1 && cMaxReach !== null && cMaxReach < 90) || hasMaxConstraint;
     const marginDeg = Math.min(currentC - machLow, hasUpperLimit ? (machHigh - currentC) : Infinity);
-    const statusColor = !inRange ? SC('red') : (marginDeg < 5 ? SC('amber') : SC('green'));
+    const statusColor = !inRange ? SC('red') : (marginDeg < 5 ? SC('warn') : SC('green'));
 
     // Shaft line
     const tipLen = 10;
@@ -1986,18 +2164,22 @@ function drawArcGauge(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
       // Manual mode — show constraint angles with warning boundaries
       let anglesHtml = '';
       if (cMinFeature !== null) {
-        anglesHtml += `<span style="color:var(--amber)">Machining: ${cMinFeature.toFixed(1)}\u00B0</span>`;
-        if (cWarnFeature !== null) anglesHtml += ` <span style="color:var(--orange);opacity:0.6">(safe ${cWarnFeature.toFixed(1)}\u00B0)</span>`;
+        anglesHtml += `<span style="color:var(--amber)">Machining: \u2265${cMinFeature.toFixed(1)}\u00B0</span>`;
+        if (cWarnFeature !== null) anglesHtml += ` <span style="color:var(--warn);opacity:0.6">(safe ${cWarnFeature.toFixed(1)}\u00B0)</span>`;
         anglesHtml += '<br>';
+      } else if (cMaxFeatureDeg !== null) {
+        anglesHtml += `<span style="color:var(--amber)">Machining: 0\u00B0\u2013${cMaxFeatureDeg.toFixed(1)}\u00B0</span><br>`;
       }
       if (cMinStone !== null) {
-        anglesHtml += `<span style="color:var(--blue)">Clearance: ${cMinStone.toFixed(1)}\u00B0</span>`;
-        if (cWarnStone !== null) anglesHtml += ` <span style="color:var(--orange);opacity:0.6">(safe ${cWarnStone.toFixed(1)}\u00B0)</span>`;
+        anglesHtml += `<span style="color:var(--blue)">Clearance: \u2265${cMinStone.toFixed(1)}\u00B0</span>`;
+        if (cWarnStone !== null) anglesHtml += ` <span style="color:var(--warn);opacity:0.6">(safe ${cWarnStone.toFixed(1)}\u00B0)</span>`;
         anglesHtml += '<br>';
+      } else if (cMaxStoneDeg !== null) {
+        anglesHtml += `<span style="color:var(--blue)">Clearance: 0\u00B0\u2013${cMaxStoneDeg.toFixed(1)}\u00B0</span><br>`;
       }
       if (cMaxReach !== null) {
-        anglesHtml += `<span style="color:var(--green)">Reachable: ${cMaxReach.toFixed(1)}\u00B0</span>`;
-        if (cWarnReach !== null) anglesHtml += ` <span style="color:var(--orange);opacity:0.6">(safe ${cWarnReach.toFixed(1)}\u00B0)</span>`;
+        anglesHtml += `<span style="color:var(--green)">Reachable: \u2264${cMaxReach.toFixed(1)}\u00B0</span>`;
+        if (cWarnReach !== null) anglesHtml += ` <span style="color:var(--warn);opacity:0.6">(safe ${cWarnReach.toFixed(1)}\u00B0)</span>`;
       }
       if (!anglesHtml) anglesHtml = '<span style="color:var(--green)">No constraints</span>';
       infoEl.innerHTML = `<div style="background:rgba(10,14,20,0.9);padding:8px 12px;border-radius:4px;line-height:1.6">${anglesHtml}</div>`;
@@ -2011,7 +2193,7 @@ function drawArcGauge(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
           statusHtml = '<span style="color:var(--green);font-weight:700;font-size:14px">OK</span>';
         } else {
           statusHtml = `<span style="color:var(--red);font-weight:700">UPPER Z LIMIT EXCEEDED</span><br>`
-            + (cMinStone !== null ? `<span style="color:var(--red)">+${(cMinStone - currentC).toFixed(1)}\u00B0 more needed</span>` : '');
+            + (cMinStone !== null ? `<span style="color:var(--red)">Add ${(cMinStone - currentC).toFixed(1)}\u00B0 to C</span>` : '');
         }
       } else {
         const machOk2 = featureOk && (reachable === null || reachable);
@@ -2019,10 +2201,10 @@ function drawArcGauge(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
           statusHtml = '<span style="color:var(--green);font-weight:700;font-size:14px">OK</span>';
         } else if (!featureOk) {
           statusHtml = `<span style="color:var(--red);font-weight:700">EXCEEDED</span><br>`
-            + (cMinFeature !== null ? `<span style="color:var(--red)">+${(cMinFeature - currentC).toFixed(1)}\u00B0 more needed</span>` : '');
+            + (cMinFeature !== null ? `<span style="color:var(--red)">Add ${(cMinFeature - currentC).toFixed(1)}\u00B0 to C</span>` : '');
         } else {
           statusHtml = `<span style="color:var(--red);font-weight:700">UNREACHABLE</span><br>`
-            + (cMaxReach !== null ? `<span style="color:var(--red)">\u2212${(currentC - cMaxReach).toFixed(1)}\u00B0 less needed</span>` : '');
+            + (cMaxReach !== null ? `<span style="color:var(--red)">Subtract ${(currentC - cMaxReach).toFixed(1)}\u00B0 from C</span>` : '');
         }
       }
 
@@ -2034,16 +2216,45 @@ function drawArcGauge(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
       if (cMinStone !== null) {
         anglesHtml += `<br><span style="color:var(--blue)">C for part clearance: ${cMinStone.toFixed(1)}\u00B0</span>`;
       }
-      if (zMarginUpper !== undefined && zMarginUpper !== null) {
-        const uColor = zMarginUpper >= 0 ? (zMarginUpper < 5 ? 'var(--amber)' : 'var(--green)') : 'var(--red)';
-        anglesHtml += `<br><span>Upper Z margin: <span style="color:${uColor}">${zMarginUpper >= 0 ? '+' : ''}${zMarginUpper.toFixed(1)} mm</span></span>`;
-      }
-      if (zMarginLower !== undefined && zMarginLower !== null) {
-        const lColor = zMarginLower >= 0 ? (zMarginLower < 5 ? 'var(--amber)' : 'var(--green)') : 'var(--red)';
-        anglesHtml += `<br><span>Lower Z margin: <span style="color:${lColor}">${zMarginLower >= 0 ? '+' : ''}${zMarginLower.toFixed(1)} mm</span></span>`;
+      const wtVal = document.getElementById('in-warntolerance').value;
+      const wt = wtVal ? parseFloat(wtVal) : 20;
+      // Show margins based on gauge mode: machining shows upper/lower, clearance shows clearance margin
+      if (arcGaugeMode === 0) {
+        // Part Clearance mode
+        if (zMarginClr !== undefined && zMarginClr !== null) {
+          const cColor = zMarginClr >= 0 ? (zMarginClr < wt ? 'var(--warn)' : 'var(--green)') : 'var(--red)';
+          anglesHtml += `<br><span>Upper Z margin: <span style="color:${cColor}">${zMarginClr >= 0 ? '+' : ''}${zMarginClr.toFixed(1)} mm</span></span>`;
+        }
+      } else {
+        // Machining mode
+        if (zMarginUpper !== undefined && zMarginUpper !== null) {
+          const uColor = zMarginUpper >= 0 ? (zMarginUpper < wt ? 'var(--warn)' : 'var(--green)') : 'var(--red)';
+          anglesHtml += `<br><span>Upper Z margin: <span style="color:${uColor}">${zMarginUpper >= 0 ? '+' : ''}${zMarginUpper.toFixed(1)} mm</span></span>`;
+        }
+        if (zMarginLower !== undefined && zMarginLower !== null) {
+          const lColor = zMarginLower >= 0 ? (zMarginLower < wt ? 'var(--warn)' : 'var(--green)') : 'var(--red)';
+          anglesHtml += `<br><span>Lower Z margin: <span style="color:${lColor}">${zMarginLower >= 0 ? '+' : ''}${zMarginLower.toFixed(1)} mm</span></span>`;
+        }
       }
 
-      infoEl.innerHTML = `<div style="background:rgba(10,14,20,0.9);padding:8px 12px;border-radius:4px;line-height:1.6">${statusHtml}</div>`
+      // Add adjusted plane toggle button when relevant
+      let adjBtnHtml = '';
+      if (currentState) {
+        const hasAdjMach = arcGaugeMode === 1 && currentState.adjustedMach;
+        const hasAdjClr = arcGaugeMode === 0 && currentState.adjustedClr;
+        if (hasAdjMach || hasAdjClr) {
+          const tab = hasAdjMach ? 'mach' : 'clr';
+          const isActive = showAdjusted3D && adjSelectedTab === tab;
+          const btnColor = isActive ? 'var(--green)' : 'var(--text-dim)';
+          const btnBorder = isActive ? 'var(--green)' : 'var(--border)';
+          adjBtnHtml = `<div style="margin-top:6px"><button onclick="toggleAdjFromGauge('${tab}')" style="
+            font-size:10px;padding:3px 10px;background:transparent;color:${btnColor};
+            border:1px solid ${btnBorder};border-radius:4px;cursor:pointer;font-family:inherit;letter-spacing:0.5px
+          ">${isActive ? 'HIDE' : 'SHOW'} ADJUSTED</button></div>`;
+        }
+      }
+
+      infoEl.innerHTML = `<div style="background:rgba(10,14,20,0.9);padding:8px 12px;border-radius:4px;line-height:1.6">${statusHtml}${adjBtnHtml}</div>`
         + `<div style="background:rgba(10,14,20,0.9);padding:8px 12px;border-radius:4px;line-height:1.6">${anglesHtml}</div>`;
     }
   }
@@ -2051,6 +2262,13 @@ function drawArcGauge(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
 
 function cycleArcGaugeMode() {
   arcGaugeMode = (arcGaugeMode + 1) % 2;
+  // Clear adjusted graphic when switching modes
+  if (showAdjusted3D) {
+    showAdjusted3D = false;
+    const btn = document.getElementById('btn-show-adj3d');
+    if (btn) { btn.textContent = 'SHOW 3D'; btn.style.borderColor = ''; btn.style.color = ''; }
+    updateScene(true);
+  }
   if (lastGaugeArgs) drawArcGauge(...lastGaugeArgs);
 }
 
@@ -2065,46 +2283,75 @@ function hideArcGauge() {
   if (badges) badges.style.display = 'none';
 }
 
-function showAdjusted(adj, originalC) {
+function showAdjusted(adjMach, adjClr, originalC, zLimit) {
   const sec = document.getElementById('sec-adjusted');
   sec.classList.remove('hidden');
-  // Start collapsed by default
   const header = sec.querySelector('.section-header');
-  const body = sec.querySelector('.section-body');
+  const body = document.getElementById('adjusted-body');
   if (!header.classList.contains('collapsed')) {
     header.classList.add('collapsed');
     body.classList.add('collapsed');
   }
-  const info = document.getElementById('adjusted-info');
-  const textEl = document.getElementById('adjusted-text');
+
+  // Store for tab switching
+  sec._adjMach = adjMach;
+  sec._adjClr = adjClr;
+  sec._originalC = originalC;
+  sec._zLimit = zLimit;
+
+  // Auto-select: if only one exists, select it
+  if (adjMach && !adjClr) adjSelectedTab = 'mach';
+  else if (!adjMach && adjClr) adjSelectedTab = 'clr';
+
+  renderAdjustedTab();
+}
+
+function renderAdjustedTab() {
+  const sec = document.getElementById('sec-adjusted');
+  const body = document.getElementById('adjusted-body');
+  const adjMach = sec._adjMach, adjClr = sec._adjClr;
+  const originalC = sec._originalC, zLimit = sec._zLimit;
+  if (!adjMach && !adjClr) return;
+
+  const hasBoth = adjMach && adjClr;
+  const adj = adjSelectedTab === 'mach' ? adjMach : adjClr;
+  if (!adj) return;
+
+  let html = '';
+
+  // Tab bar when both exist
+  if (hasBoth) {
+    const mActive = adjSelectedTab === 'mach';
+    html += `<div style="display:flex;gap:6px;margin-bottom:8px">
+      <button class="batch-chip ${mActive ? 'active' : ''}" onclick="selectAdjTab('mach')" style="color:var(--amber)">Machining</button>
+      <button class="batch-chip ${!mActive ? 'active' : ''}" onclick="selectAdjTab('clr')" style="color:var(--blue)">Clearance</button>
+    </div>`;
+  }
 
   const deltaC = toDeg(adj.C) - toDeg(originalC);
   const featureStatusClass = adj.featureOk ? 'status-ok' : 'status-fail';
   const featureStatusText = adj.featureOk ? 'OK' : 'EXCEEDED';
+  const marginMach = adj.zPivotFeature - zLimit;
+  const marginClr = adj.zPivotStone !== null ? adj.zPivotStone - zLimit : null;
 
-  let html = `
-    <div class="result-grid">
-      <span class="lbl">New C:</span><span class="val">${toDeg(adj.C).toFixed(2)}&deg;</span>
-      <span class="lbl">A (unchanged):</span><span class="val">${toDeg(adj.A).toFixed(2)}&deg;</span>
-      <span class="lbl">&Delta;C:</span><span class="val">${deltaC >= 0 ? '+' : ''}${deltaC.toFixed(2)}&deg;</span>
-    </div>
-    <div class="divider"></div>
-    <div class="result-grid">
-      <span class="lbl">Machining CoR:</span><span class="val">${adj.zPivotFeature.toFixed(2)} mm</span>
-      <span class="lbl">Machining level:</span><span class="val"><span class="status-badge ${featureStatusClass}">${featureStatusText}</span></span>
-    </div>`;
+  html += `<div class="result-grid">
+    <span class="lbl">New C:</span><span class="val">${toDeg(adj.C).toFixed(2)}&deg;</span>
+    <span class="lbl">A (unchanged):</span><span class="val">${toDeg(adj.A).toFixed(2)}&deg;</span>
+    <span class="lbl">Add to C:</span><span class="val">${deltaC >= 0 ? '+' : ''}${deltaC.toFixed(2)}&deg;</span>
+  </div>
+  <div class="divider"></div>
+  <div class="result-grid">
+    <span class="lbl">Machining CoR:</span><span class="val">${adj.zPivotFeature.toFixed(2)} mm</span>
+    <span class="lbl">Machining margin:</span><span class="val"><span class="status-badge ${featureStatusClass}">${featureStatusText}${adj.featureOk ? ' (+' + marginMach.toFixed(1) + ' mm)' : ''}</span></span>
+  </div>`;
 
   if (adj.zPivotStone !== null) {
-    const stoneStatusClass = adj.stoneOk ? 'status-ok' : 'status-fail';
-    const stoneStatusText = adj.stoneOk ? 'OK' : 'UPPER Z LIMIT EXCEEDED';
+    const sClass = adj.stoneOk ? 'status-ok' : 'status-fail';
+    const sText = adj.stoneOk ? 'OK' : 'EXCEEDED';
     html += `<div class="result-grid" style="margin-top:4px">
-      <span class="lbl">Part Clearance CoR:</span><span class="val">${adj.zPivotStone.toFixed(2)} mm</span>
-      <span class="lbl">Part Clearance level:</span><span class="val"><span class="status-badge ${stoneStatusClass}">${stoneStatusText}</span></span>
+      <span class="lbl">Clearance CoR:</span><span class="val">${adj.zPivotStone.toFixed(2)} mm</span>
+      <span class="lbl">Clearance margin:</span><span class="val"><span class="status-badge ${sClass}">${sText}${adj.stoneOk ? ' (+' + marginClr.toFixed(1) + ' mm)' : ''}</span></span>
     </div>`;
-
-    if (!adj.stoneOk && adj.featureOk) {
-      html += `<div class="inline-note" style="color:var(--amber)">Can machine but must link around outside of part</div>`;
-    }
   }
 
   if (adj.reachable === false) {
@@ -2113,11 +2360,20 @@ function showAdjusted(adj, originalC) {
     </div>`;
   }
 
-  html += `<div class="divider"></div>`;
-  info.innerHTML = html;
+  const planeText = formatPlaneText(adj.name, adj.origin, adj.matrix);
+  html += `<div class="matrix-output" style="margin-top:6px">
+    <button class="copy-btn" onclick="copyAdjText('adj-text-current')">COPY</button>
+    <span id="adj-text-current">${planeText}</span>
+  </div>`;
 
-  textEl.textContent = formatPlaneText(adj.name, adj.origin, adj.matrix);
+  body.innerHTML = html;
 }
+
+window.selectAdjTab = function(tab) {
+  adjSelectedTab = tab;
+  renderAdjustedTab();
+  if (showAdjusted3D) updateScene(true);
+};
 
 window.clearPlaneData = function() {
   document.getElementById('in-plane').value = '';
@@ -2368,26 +2624,22 @@ function calculateBatch() {
     const cMaxDeg = cMaxReach !== null ? toDeg(cMaxReach) : null;
     const reachMargin = cMaxDeg !== null ? (cMaxDeg - cDeg) : null;
 
-    // Status logic:
-    // FAIL = machining level exceeds Z limit OR unreachable
-    // WARN (clearance) = machining OK but clearance level doesn't clear
-    // WARN (tight) = everything clears but margins are close
-    // OK = comfortable clearance
-    let status, statusNote = '';
-    if (!featureOk) {
-      status = 'fail';
-      statusNote = 'machining level exceeds Z limit';
-    } else if (reachable === false) {
-      status = 'fail';
-      statusNote = 'CoR cannot reach';
-    } else if (stoneOk === false) {
-      status = 'fail';
-      statusNote = 'part clearance level';
-    } else if (featureMargin < wt || (stoneMargin !== null && stoneMargin < wt)) {
-      status = 'warn';
-      statusNote = 'tight margins';
-    } else {
-      status = 'ok';
+    // Status logic — respects batchStatusBasis toggle
+    let status = 'ok', statusNote = '', hasWarn = false;
+    const inclMach = batchStatusBasis === 'mach' || batchStatusBasis === 'both';
+    const inclClr = batchStatusBasis === 'clr' || batchStatusBasis === 'both';
+    if (inclMach) {
+      if (!featureOk) { status = 'fail'; statusNote = 'machining level exceeds Z limit'; }
+      else if (reachable === false) { status = 'fail'; statusNote = 'CoR cannot reach'; }
+      else if (featureMargin < wt) { hasWarn = true; status = 'warn'; statusNote = 'tight machining margin'; }
+    }
+    if (inclClr) {
+      if (stoneOk === false) {
+        if (status !== 'fail') { status = 'fail'; statusNote = 'part clearance level'; }
+      } else if (stoneMargin !== null && stoneMargin < wt) {
+        hasWarn = true;
+        if (status === 'ok') { status = 'warn'; statusNote = 'tight clearance margin'; }
+      }
     }
 
     return {
@@ -2395,7 +2647,7 @@ function calculateBatch() {
       featureOk, stoneOk, reachable,
       featureMargin, stoneMargin, cMinBinding, cMaxReach,
       angleMargin, reachMargin,
-      status, statusNote, hasOverride: !!planeOverrides[idx],
+      status, statusNote, hasWarn, hasOverride: !!planeOverrides[idx],
     };
   });
 
@@ -2423,32 +2675,63 @@ function renderBatchTable() {
 
   // Counts
   const failCount = batchResults.filter(r => r.status === 'fail').length;
-  const warnCount = batchResults.filter(r => r.status === 'warn').length;
+  const warnCount = batchResults.filter(r => r.hasWarn).length;
   const okCount = batchResults.filter(r => r.status === 'ok').length;
   const usedCount = batchPlanes.filter(p => p.used).length;
   const total = batchResults.length;
 
   document.getElementById('batch-count').innerHTML =
-    `(${total} planes${failCount ? `, <span style="color:var(--red)">${failCount} fail</span>` : ''}${warnCount ? `, <span style="color:var(--amber)">${warnCount} warn</span>` : ''})`;
+    `(${total} planes${warnCount ? `, <span style="color:var(--warn)">${warnCount} warning</span>` : ''}${failCount ? `, <span style="color:var(--red)">${failCount} axis limit</span>` : ''})`;
 
   // Filter bar
   const filtersEl = document.getElementById('batch-filters');
   filtersEl.innerHTML = `
     <button class="batch-chip ${batchFilter === 'all' ? 'active' : ''}" onclick="setBatchFilter('all')">All (${total})</button>
-    ${failCount > 0 ? `<button class="batch-chip ${batchFilter === 'fail' ? 'active' : ''}" onclick="setBatchFilter('fail')" style="color:var(--red)">Fail (${failCount})</button>` : ''}
-    ${warnCount > 0 ? `<button class="batch-chip ${batchFilter === 'warn' ? 'active' : ''}" onclick="setBatchFilter('warn')" style="color:var(--amber)">Warn (${warnCount})</button>` : ''}
     <button class="batch-chip ${batchFilter === 'used' ? 'active' : ''}" onclick="setBatchFilter('used')">Used (${usedCount})</button>
+    ${warnCount > 0 ? `<button class="batch-chip ${batchFilter === 'warn' ? 'active' : ''}" onclick="setBatchFilter('warn')" style="color:var(--warn)">Warning (${warnCount})</button>` : ''}
+    ${failCount > 0 ? `<button class="batch-chip ${batchFilter === 'fail' ? 'active' : ''}" onclick="setBatchFilter('fail')" style="color:var(--red)">Axis Limit (${failCount})</button>` : ''}
+    <span style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:0.82em;opacity:0.8">
+      <span style="color:var(--text-dim)">Status:</span>
+      <span class="mode-toggle" style="font-size:9px">
+        <span class="mode-opt ${batchStatusBasis === 'both' ? 'active' : ''}" onclick="setStatusBasis('both')">Both</span>
+        <span class="mode-opt ${batchStatusBasis === 'mach' ? 'active' : ''}" onclick="setStatusBasis('mach')">Machining</span>
+        <span class="mode-opt ${batchStatusBasis === 'clr' ? 'active' : ''}" onclick="setStatusBasis('clr')">Clearance</span>
+      </span>
+    </span>
   `;
 
-  // Sort: fail first, then warn, then ok
-  const sortOrder = { fail: 0, warn: 1, ok: 2 };
-  const indexed = batchResults.map((r, i) => ({ ...r, idx: i }));
-  indexed.sort((a, b) => sortOrder[a.status] - sortOrder[b.status]);
+  // Sort by active column
+  const statusRank = { fail: 0, warn: 1, ok: 2 };
+  const machRank = { EXCEEDED: 0, UNREACHABLE: 1, CLOSE: 2, OK: 3 };
+  const clrRank = { EXCEEDED: 0, CLOSE: 1, OK: 2, '—': 3 };
+  const indexed = batchResults.map((r, i) => {
+    const fText = !r.featureOk ? 'EXCEEDED' : (r.reachable === false ? 'UNREACHABLE' : (r.featureMargin < wt ? 'CLOSE' : 'OK'));
+    const sText = r.stoneMargin === null ? '—' : (!r.stoneOk ? 'EXCEEDED' : (r.stoneMargin < wt ? 'CLOSE' : 'OK'));
+    return { ...r, idx: i, fText, sText };
+  });
+  indexed.sort((a, b) => {
+    let cmp = 0;
+    switch (batchSortCol) {
+      case 'name': cmp = batchPlanes[a.idx].name.localeCompare(batchPlanes[b.idx].name); break;
+      case 'C': cmp = a.C - b.C; break;
+      case 'A': cmp = a.A - b.A; break;
+      case 'machining': cmp = (machRank[a.fText] ?? 9) - (machRank[b.fText] ?? 9); break;
+      case 'clearance': cmp = (clrRank[a.sText] ?? 9) - (clrRank[b.sText] ?? 9); break;
+      default: cmp = statusRank[a.status] - statusRank[b.status]; break;
+    }
+    return batchSortAsc ? cmp : -cmp;
+  });
+
+  // Update sort arrow indicators
+  ['name', 'C', 'A', 'machining', 'clearance'].forEach(col => {
+    const span = document.getElementById('sort-' + col);
+    if (span) span.textContent = batchSortCol === col ? (batchSortAsc ? ' ▲' : ' ▼') : '';
+  });
 
   // Filter
   const filtered = indexed.filter(r => {
     if (batchFilter === 'fail') return r.status === 'fail';
-    if (batchFilter === 'warn') return r.status === 'warn';
+    if (batchFilter === 'warn') return r.hasWarn;
     if (batchFilter === 'used') return batchPlanes[r.idx].used;
     return true;
   });
@@ -2463,14 +2746,10 @@ function renderBatchTable() {
     const aDeg = aDisplayDeg(r.A).toFixed(1);
     const cDeg = toDeg(r.C).toFixed(1);
 
-    // Machining status (matches single-plane card logic)
+    // Machining/Clearance status colors
     const machOk = r.featureOk && (r.reachable === null || r.reachable);
-    const fText = !r.featureOk ? 'EXCEEDED' : (r.reachable === false ? 'UNREACHABLE' : (r.featureMargin < wt ? 'CLOSE' : 'OK'));
-    const fColor = !machOk ? 'var(--red)' : (r.featureMargin < wt ? 'var(--orange)' : 'var(--green)');
-
-    // Clearance status (matches single-plane card logic)
-    const sText = r.stoneMargin === null ? '—' : (!r.stoneOk ? 'EXCEEDED' : (r.stoneMargin < wt ? 'CLOSE' : 'OK'));
-    const sColor = r.stoneMargin === null ? '' : (!r.stoneOk ? 'var(--red)' : (r.stoneMargin < wt ? 'var(--orange)' : 'var(--green)'));
+    const fColor = !machOk ? 'var(--red)' : (r.featureMargin < wt ? 'var(--warn)' : 'var(--green)');
+    const sColor = r.stoneMargin === null ? '' : (!r.stoneOk ? 'var(--red)' : (r.stoneMargin < wt ? 'var(--warn)' : 'var(--green)'));
 
     const overrideIcon = r.hasOverride ? ' *' : '';
 
@@ -2482,8 +2761,8 @@ function renderBatchTable() {
       <td title="${p.name}">${p.name.length > 20 ? p.name.slice(0, 18) + '…' : p.name}${overrideIcon}</td>
       <td>${cDeg}°</td>
       <td>${aDeg}°</td>
-      <td style="color:${fColor}">${fText}</td>
-      <td style="color:${sColor}">${sText}</td>
+      <td style="color:${fColor}">${r.fText}</td>
+      <td style="color:${sColor}">${r.sText}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -2492,6 +2771,19 @@ function renderBatchTable() {
 window.setBatchFilter = function(filter) {
   batchFilter = filter;
   renderBatchTable();
+};
+
+window.setBatchSort = function(col) {
+  if (batchSortCol === col) batchSortAsc = !batchSortAsc;
+  else { batchSortCol = col; batchSortAsc = true; }
+  renderBatchTable();
+  saveSettings();
+};
+
+window.setStatusBasis = function(basis) {
+  batchStatusBasis = basis;
+  calculateBatch();
+  saveSettings();
 };
 
 function viewBatchPlane(idx) {
@@ -2510,6 +2802,9 @@ function viewBatchPlane(idx) {
 
   // Run single-plane calc to show full analysis + 3D
   calculate();
+
+  // Hide detail cards in batch mode — 3D view has the same info
+  document.getElementById('sec-results').classList.add('hidden');
 
   // Re-highlight active row
   renderBatchTable();
@@ -2532,13 +2827,44 @@ window.overridePlaneZ = function(idx, event) {
   calculateBatch();
 };
 
-window.copyAdjusted = function() {
-  const text = document.getElementById('adjusted-text').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.querySelector('.copy-btn');
+window.copyAdjText = function(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const btn = el.parentElement.querySelector('.copy-btn');
     btn.textContent = 'COPIED';
     setTimeout(() => btn.textContent = 'COPY', 1500);
   });
+};
+
+window.toggleAdjFromGauge = function(tab) {
+  if (showAdjusted3D && adjSelectedTab === tab) {
+    showAdjusted3D = false;
+  } else {
+    adjSelectedTab = tab;
+    showAdjusted3D = true;
+    // Ensure adjusted section is visible and expanded
+    const sec = document.getElementById('sec-adjusted');
+    if (sec) {
+      sec.classList.remove('hidden');
+      const header = sec.querySelector('.section-header');
+      const body = sec.querySelector('.section-body');
+      if (header && header.classList.contains('collapsed')) {
+        header.classList.remove('collapsed');
+        body.classList.remove('collapsed');
+      }
+    }
+  }
+  // Sync the SHOW 3D button in the adjusted section
+  const btn = document.getElementById('btn-show-adj3d');
+  if (btn) {
+    btn.textContent = showAdjusted3D ? 'HIDE 3D' : 'SHOW 3D';
+    btn.style.borderColor = showAdjusted3D ? 'var(--green)' : '';
+    btn.style.color = showAdjusted3D ? 'var(--green)' : '';
+  }
+  renderAdjustedTab();
+  updateScene(true);
+  if (lastGaugeArgs) drawArcGauge(...lastGaugeArgs);
 };
 
 // ═══════════════════════════════════════════════════
@@ -2592,6 +2918,9 @@ function saveSettings() {
     showReachTool,
     colorblindMode,
     manualMode: document.getElementById('chk-manual-mode').checked,
+    batchSortCol,
+    batchSortAsc,
+    batchStatusBasis,
   };
   localStorage.setItem('planeCalcSettings', JSON.stringify(data));
 }
@@ -2621,6 +2950,9 @@ function loadSettings() {
         document.getElementById('chk-manual-mode').checked = true;
         toggleManualMode(true);
       }
+      if (data.batchSortCol) batchSortCol = data.batchSortCol;
+      if (data.batchSortAsc !== undefined) batchSortAsc = data.batchSortAsc;
+      if (data.batchStatusBasis) batchStatusBasis = data.batchStatusBasis;
     }
   } catch (e) {}
 }
@@ -2648,8 +2980,10 @@ document.getElementById('in-plane').addEventListener('input', onInputChange);
       if (e.key === 'Enter') { e.preventDefault(); this.blur(); saveSettings(); document.getElementById('chk-manual-mode').checked ? calculateManual() : calculate(); }
     });
   });
-document.getElementById('chk-manual-mode').addEventListener('change', function() {
-  toggleManualMode(this.checked);
+document.getElementById('mode-toggle').addEventListener('click', function() {
+  const chk = document.getElementById('chk-manual-mode');
+  chk.checked = !chk.checked;
+  toggleManualMode(chk.checked);
 });
 document.getElementById('chk-edge-mode').addEventListener('change', function() {
   saveSettings();
@@ -3482,22 +3816,34 @@ function updateScene(skipReframe) {
   buildCArc(s.A, s.C, SChex('blue'), 'cArcOriginal', '', sceneScale, undefined, offsetPivotPos);
 
 
-  // Adjusted tool vector (only when toggled on)
-  if (s.adjusted && showAdjusted3D) {
-    const adjC = s.adjusted.C;
-    const adjRadiusOff = s.toolRadius * Math.sin(adjC);
-    const adjRadiusDisplayOff = (s.machMode === 'radius' && s.toolRadius > 0) ? adjRadiusOff : 0;
-    const adjEffectiveFz = (s.machMode === 'radius' && s.toolRadius > 0) ? fz - adjRadiusOff : fz;
-    const adjDispDir = new THREE.Vector3(-s.adjusted.normal[0], -s.adjusted.normal[1], -s.adjusted.normal[2]).normalize();
-    const adjPivotPos = adjDispDir.clone().multiplyScalar(-s.toolLen);
-    adjPivotPos.x += toolOffset.x;
-    adjPivotPos.y += toolOffset.y;
-    buildToolVector(fo, s.adjusted.normal, s.toolLen, SChex('green'), 'toolAdjusted', sceneScale, s.toolRadius, adjRadiusDisplayOff || undefined, undefined, toolOffset);
-    buildPivotPoint(fz, s.adjusted.normal, s.toolLen, s.zLimit, adjC, 'pivotAdjusted', 'Adj CoR', sceneScale,
-      { featureZOffset: adjRadiusDisplayOff || 0, effectiveFeatureZ: adjEffectiveFz, xyOffset: toolOffset });
-    const adjOffsetPivot = adjPivotPos.clone();
-    adjOffsetPivot.z += adjRadiusOffset;
-    buildCArc(s.A, adjC, SChex('green'), 'cArcAdjusted', 'Adj ', sceneScale, undefined, adjOffsetPivot);
+  // Adjusted tool vector (only when toggled on — shows selected tab)
+  if (showAdjusted3D) {
+    const adj = (s.adjustedMach && s.adjustedClr)
+      ? (adjSelectedTab === 'mach' ? s.adjustedMach : s.adjustedClr)
+      : s.adjusted;
+    if (adj) {
+      // Determine if the displayed adjusted plane is for clearance
+      const isClrAdj = (s.adjustedMach && s.adjustedClr) ? adjSelectedTab === 'clr'
+        : !s.adjustedMach && !!s.adjustedClr;
+      const colorName = isClrAdj ? 'blue' : 'amber';
+      const prefix = isClrAdj ? 'Clr ' : 'Mach ';
+      const adjC = adj.C;
+      const adjRadiusOff = s.toolRadius * Math.sin(adjC);
+      // Clearance always uses radius; machining respects machMode
+      const useRadius = isClrAdj || (s.machMode === 'radius' && s.toolRadius > 0);
+      const adjRadiusDisplayOff = useRadius ? adjRadiusOff : 0;
+      // Clearance tab: position tool tip at stone Z instead of machining Z
+      const tipZBase = (isClrAdj && s.zStone !== null) ? machineZToDisplay(s.zStone, fz) : 0;
+      const adjTipZ = tipZBase + adjRadiusDisplayOff;
+      const adjRefZ = isClrAdj && s.zStone !== null ? s.zStone : fz;
+      const adjEffectiveFz = useRadius ? adjRefZ - adjRadiusOff : adjRefZ;
+      const adjDispDir = new THREE.Vector3(-adj.normal[0], -adj.normal[1], -adj.normal[2]).normalize();
+      const adjPivotPos = new THREE.Vector3(toolOffset.x, toolOffset.y, adjTipZ).add(adjDispDir.clone().multiplyScalar(-s.toolLen));
+      buildToolVector(fo, adj.normal, s.toolLen, SChex(colorName), 'toolAdjusted', sceneScale, s.toolRadius, adjTipZ || undefined, undefined, toolOffset);
+      buildPivotPoint(adjRefZ, adj.normal, s.toolLen, s.zLimit, adjC, 'pivotAdjusted', prefix + 'CoR', sceneScale,
+        { featureZOffset: adjTipZ || 0, effectiveFeatureZ: adjEffectiveFz, xyOffset: toolOffset });
+      buildCArc(s.A, adjC, SChex(colorName), 'cArcAdjusted', prefix, sceneScale, undefined, adjPivotPos);
+    }
   }
 
   // Machining level label — offset well below and to the side so it clears arcs and tool labels

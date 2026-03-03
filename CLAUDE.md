@@ -8,7 +8,7 @@ Opens in any modern browser — no build step, no server, no dependencies beyond
 
 ## File
 
-- `index.html` — the entire application (~3,600 lines)
+- `index.html` — the entire application (~3,900 lines)
 
 ## Quick Start
 
@@ -85,8 +85,8 @@ All status indicators (cards, badges, batch table) use three consistent states:
 | State | Color | Condition |
 |-------|-------|-----------|
 | OK | Green | Margin >= safety margin |
-| CLOSE | Orange | OK but margin < safety margin |
-| EXCEEDED / UNREACHABLE | Red | Limit violated or tool cannot reach |
+| Warning (CLOSE) | Orange (`--warn`) | OK but margin < safety margin |
+| Axis Limit (EXCEEDED / UNREACHABLE) | Red | Limit violated or tool cannot reach |
 
 ### CoR Z Display
 
@@ -140,9 +140,10 @@ Top, Front, Back, Right, Left preset camera positions. Camera state (position, t
 Load a file with multiple planes (separated by `----`). The calculator:
 1. Parses all planes
 2. Computes feasibility for each
-3. Shows batch table with A°, C°, machining/clearance/C_min status
-4. Filter buttons: All, Problems, Used
-5. Click any row to view that plane in detail + 3D
+3. Shows batch table with sortable columns (A°, C°, machining/clearance status)
+4. Filter buttons: All, Used, Warning, Axis Limit
+5. Status basis toggle: `Both | Machining | Clearance` — controls which constraints are included in row status
+6. Click any row to view that plane in detail + 3D
 
 ### Batch Table Columns
 
@@ -154,13 +155,21 @@ Load a file with multiple planes (separated by `----`). The calculator:
 | Machining | Status: OK (green) / CLOSE (orange) / EXCEEDED or UNREACHABLE (red) |
 | Clearance | Status: OK (green) / CLOSE (orange) / EXCEEDED (red) / — (no data) |
 
-### Adjusted Plane
+### Adjusted Planes
 
-When a plane is NOT feasible, the calculator auto-generates an adjusted plane with the minimum C angle that fits within the Z limit. The adjusted matrix is reconstructed via Gram-Schmidt orthogonalization. Can be toggled in 3D view and copied to clipboard.
+When a plane is NOT feasible, the calculator generates separate adjusted planes for machining and clearance constraints, each incorporating the safety margin so the adjusted angle lands in the safe zone (not just barely passing).
+
+- **Machining adjusted** (amber) — minimum C angle for machining level to clear Z limit with safety margin
+- **Clearance adjusted** (blue) — minimum C angle for part clearance to clear Z limit with safety margin; always uses tool radius (no center-point option)
+- **Tab selection** — when both fail, tabs allow switching between machining and clearance adjusted planes
+- **SHOW ADJUSTED button** — appears next to the pie chart gauge for quick toggle of the adjusted 3D visualization
+- **3D rendering** — adjusted tool vector, CoR, and C arc displayed in amber (machining) or blue (clearance)
+- **Copy to clipboard** — adjusted plane matrix in Mastercam format
+- Adjusted planes use `safeZLimit = zLimit + warnTolerance` (tighter limit) and `calcConstraint()` for radius-aware targeting
 
 ## Manual Mode
 
-Toggle "Manual" checkbox to switch from file-based analysis to manual constraint exploration. In manual mode, you enter machine/tool parameters and the calculator shows the angle constraints without loading a plane file.
+Segmented `File | Manual` toggle switches from file-based analysis to manual constraint exploration. In manual mode, you enter machine/tool parameters and the calculator shows the angle constraints without loading a plane file.
 
 ### Manual Mode Features
 
@@ -173,9 +182,11 @@ Toggle "Manual" checkbox to switch from file-based analysis to manual constraint
 
 ### Arc Gauge Info Panel
 
-When in manual mode, the arc gauge info panel (top-left of 3D view) shows:
-- Constraint angles with their identity color (amber for machining, blue for clearance, green for reachable)
-- Safety margin angles in orange: "(safe X.X°)"
+The arc gauge info panel (top-left of 3D view) shows constraint angles and status. In file mode, it toggles between Machining and Part Clearance views:
+
+- **File mode:** Status (EXCEEDED/OK), delta angle message, C constraint angles, Z margins with color coding, and SHOW ADJUSTED button when an adjusted plane exists
+- **Manual mode:** Constraint angles with identity colors and safety margin sub-ranges
+- **Gauge mode toggle:** Click the mode button below the pie chart to cycle between Part Clearance and Machining views; switching modes clears the adjusted plane graphic
 
 ## Color System
 
@@ -184,10 +195,11 @@ Centralized color system with normal and colorblind palettes:
 | Name | Normal | Colorblind | CSS Variable | Usage |
 |------|--------|------------|--------------|-------|
 | green | `#00ff88` | `#0072B2` | `--green` | OK/safe states |
-| red | `#ff4444` | `#D55E00` | `--red` | Fail/exceeded states |
-| amber | `#ffaa00` | `#F0E442` | `--amber` | Machining identity, card borders |
-| blue | `#58a6ff` | `#CC79A7` | `--blue` | Clearance identity |
-| orange | `#ff6b35` | `#E8751A` | `--orange` | Safety margin warnings, CLOSE status |
+| red | `#ff4444` | `#D55E00` | `--red` | Fail/exceeded/axis limit states |
+| amber | `#ffaa00` | `#F0E442` | `--amber` | Machining identity, adjusted machining |
+| blue | `#58a6ff` | `#CC79A7` | `--blue` | Clearance identity, adjusted clearance |
+| warn | `#ff8c00` | `#E8751A` | `--warn` | Warning states (CLOSE TO LIMIT) |
+| orange | `#ff6b35` | `#E8751A` | `--orange` | Legacy/misc |
 
 - `SC(name)` — get hex color for current mode
 - `SCrgba(name, alpha)` — get rgba color string
@@ -231,7 +243,8 @@ All inputs trigger automatic recalculation on change — no manual Calculate but
 | `parseMultiplePlanes(text)` | Split file into planes, parse each |
 | `extractAngles(normal)` | Get A and C angles from plane normal |
 | `calcZPivot(zFeature, toolLen, C)` | Compute CoR Z position |
-| `calcCMin(zRef, zLimit, toolLen)` | Compute minimum C angle for Z limit |
+| `calcCMin(zRef, zLimit, toolLen)` | Compute minimum C angle for Z limit (center point) |
+| `calcConstraint(zRef, zLimit, toolLen, toolRadius)` | Radius-aware constraint: returns `{cMin, cMax, impossible}` |
 | `reconstructMatrix(matrix, newNormal)` | Gram-Schmidt rebuild for adjusted plane |
 | `aDisplayDeg(A)` | Convert internal A to display convention (+90°) |
 | `machineZToDisplay(mz, fz)` | Convert machine Z to display coords |
@@ -243,6 +256,19 @@ All inputs trigger automatic recalculation on change — no manual Calculate but
 | `buildToolVector(...)` | Create tool shaft, disk, ring, arrow in 3D |
 | `buildPivotPoint(...)` | Create CoR cylinder with wireframe crosshairs |
 | `updateScene(skipReframe)` | Rebuild entire 3D scene from current state |
+
+## UI Components
+
+### Segmented Toggles (`.mode-toggle`)
+Reusable segmented button component with `.mode-opt` spans. Active segment gets `.active` class with accent background. Used for:
+- **File/Manual** mode switch (Parameters section)
+- **Both/Machining/Clearance** status basis (Batch filter bar)
+
+### Batch Filter Chips (`.batch-chip`)
+Pill buttons for filtering batch table rows. Order: All, Used, Warning, Axis Limit.
+
+### 3D Status Badges
+Positioned top-right of 3D view. Background opacity 0.55 for all states (red/warn/green). Labels use amber (machining) and blue (clearance) identity colors.
 
 ## Development Notes
 
