@@ -24,6 +24,16 @@
     --amber: #ffaa00;
     --blue: #58a6ff;
     --accent: #388bfd;
+    --green-bg15: rgba(0,255,136,0.15);
+    --green-bg12: rgba(0,255,136,0.12);
+    --green-bg25: rgba(0,255,136,0.25);
+    --green-border: rgba(0,255,136,0.3);
+    --red-bg15: rgba(255,68,68,0.15);
+    --red-bg12: rgba(255,68,68,0.12);
+    --red-border: rgba(255,68,68,0.3);
+    --amber-bg15: rgba(255,170,0,0.15);
+    --amber-bg12: rgba(255,170,0,0.12);
+    --amber-border: rgba(255,170,0,0.3);
   }
 
   body {
@@ -83,6 +93,7 @@
     flex: 1;
     position: relative;
     background: #0a0e14;
+    overflow: hidden;
   }
 
   #three-canvas {
@@ -95,7 +106,6 @@
     background: var(--bg-section);
     border: 1px solid var(--border);
     border-radius: 6px;
-    overflow: hidden;
   }
 
   .section-header {
@@ -133,7 +143,6 @@
     flex-direction: column;
     gap: 8px;
     min-width: 0; /* prevent flex blowout */
-    overflow: hidden;
   }
 
   .section-body.collapsed {
@@ -153,7 +162,7 @@
     flex-shrink: 0;
   }
 
-  .field-row input {
+  .field-row input, .field-row select {
     flex: 1;
     background: var(--bg-input);
     border: 1px solid var(--border);
@@ -166,7 +175,12 @@
     transition: border-color 0.15s;
   }
 
-  .field-row input:focus {
+  .field-row select option, #sel-recent-files option {
+    background: var(--bg-input);
+    color: var(--text);
+  }
+
+  .field-row input:focus, .field-row select:focus {
     border-color: var(--border-focus);
   }
 
@@ -260,9 +274,39 @@
     letter-spacing: 1px;
   }
 
-  .status-ok { background: rgba(0,255,136,0.15); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
-  .status-fail { background: rgba(255,68,68,0.15); color: var(--red); border: 1px solid rgba(255,68,68,0.3); }
-  .status-warn { background: rgba(255,170,0,0.15); color: var(--amber); border: 1px solid rgba(255,170,0,0.3); }
+  .status-ok { background: var(--green-bg15); color: var(--green); border: 1px solid var(--green-border); }
+  .status-fail { background: var(--red-bg15); color: var(--red); border: 1px solid var(--red-border); }
+  .status-warn { background: var(--amber-bg15); color: var(--amber); border: 1px solid var(--amber-border); }
+
+  /* Dashboard status cards */
+  .status-card {
+    flex: 1;
+    border-radius: 8px;
+    padding: 8px 6px;
+    text-align: center;
+    border: 2px solid var(--border);
+    background: var(--bg-section);
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+  .status-card:hover { background: rgba(255,255,255,0.03); }
+  .status-card.card-ok    { border-color: var(--green); }
+  .status-card.card-warn  { border-color: var(--amber); }
+  .status-card.card-fail  { border-color: var(--red); }
+  .status-card .card-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); margin-bottom: 4px; font-weight: 600; }
+  .status-card .card-badge { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .status-card .card-margin { font-size: 12px; opacity: 0.8; }
+
+  /* Expandable detail rows */
+  .detail-row { padding: 6px 8px; border-radius: 6px; cursor: pointer; user-select: none; }
+  .detail-row:hover { background: rgba(255,255,255,0.04); }
+  .detail-row .detail-summary { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .detail-row .detail-arrow { font-size: 10px; color: var(--text-dim); transition: transform 0.2s; display: inline-block; }
+  .detail-row.expanded .detail-arrow { transform: rotate(90deg); }
+  .detail-row .detail-body { display: none; padding: 6px 0 2px 18px; }
+  .detail-row.expanded .detail-body { display: block; }
+  .detail-row .detail-label { font-weight: 600; flex: 1; }
+  .detail-row .detail-value { color: var(--text-dim); }
 
   .matrix-output {
     font-size: 10px;
@@ -343,6 +387,7 @@
   .scene-label.label-red { color: var(--red); }
   .scene-label.label-blue { color: var(--blue); }
   .scene-label.label-amber { color: var(--amber); }
+  .scene-label.label-gray { color: #888888; }
 
   /* Inline color spans used in result grids (not 3D overlays) */
   .color-green { color: var(--green); font-weight: 700; }
@@ -411,9 +456,9 @@
     letter-spacing: 0.5px;
   }
 
-  .batch-badge-ok { background: rgba(0,255,136,0.12); color: var(--green); }
-  .batch-badge-fail { background: rgba(255,68,68,0.12); color: var(--red); }
-  .batch-badge-warn { background: rgba(255,170,0,0.12); color: var(--amber); }
+  .batch-badge-ok { background: var(--green-bg12); color: var(--green); }
+  .batch-badge-fail { background: var(--red-bg12); color: var(--red); }
+  .batch-badge-warn { background: var(--amber-bg12); color: var(--amber); }
 
   .batch-filter-bar {
     display: flex;
@@ -439,14 +484,12 @@
   .batch-chip.active { border-color: var(--accent); color: var(--text); background: rgba(56,139,253,0.15); }
 
   .batch-scroll {
-    max-height: 280px;
-    overflow-y: auto;
     overflow-x: auto;
   }
 
-  .batch-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
-  .batch-scroll::-webkit-scrollbar-track { background: transparent; }
-  .batch-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .batch-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  .batch-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 4px; }
+  .batch-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
 
   .batch-override { color: var(--amber); font-style: italic; cursor: pointer; }
   .batch-override:hover { text-decoration: underline; }
@@ -462,18 +505,25 @@
 <div class="main-layout">
   <div class="left-panel">
 
-    <!-- Inputs (Machine Settings + Plane Data + Feature Inputs) -->
+    <!-- Parameters (Machine Settings + Plane Data + Feature Inputs) -->
     <div class="section" id="sec-inputs">
-      <div class="section-header" onclick="toggleSection('sec-inputs')">
-        <h2>Inputs</h2>
-        <span class="toggle">&#9660;</span>
+      <div class="section-header" style="cursor:default">
+        <h2>Parameters</h2>
+        <button class="btn btn-secondary hidden" id="btn-refresh-file" onclick="refreshPlaneFile()" style="font-size:11px;padding:5px 0;margin-left:auto;width:65%;border-color:var(--amber);color:var(--amber)" title="Reload source file">&#x21bb; RELOAD FILE</button>
       </div>
       <div class="section-body">
         <textarea id="in-plane" style="display:none"></textarea>
         <div class="btn-row" style="align-items:center;margin-bottom:6px">
-          <span id="file-name" style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0" title="">No file loaded</span>
-          <button class="btn btn-secondary hidden" id="btn-refresh-file" onclick="refreshPlaneFile()" style="font-size:13px;padding:2px 6px;line-height:1" title="Reload file">&#x21bb;</button>
-          <button class="btn btn-secondary" onclick="pickPlaneFile()" style="font-size:10px;padding:3px 10px">LOAD FILE</button>
+          <label style="font-size:10px;display:flex;align-items:center;gap:4px;color:var(--text-dim);cursor:pointer;white-space:nowrap"><input type="checkbox" id="chk-manual-mode" style="margin:0"> Manual</label>
+          <span id="file-picker-row" style="display:contents">
+            <span id="file-name" style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0" title="">No file loaded</span>
+            <select id="sel-recent-files" style="font-size:10px;padding:3px 4px;max-width:120px;background:var(--input-bg);color:var(--text);border:1px solid var(--border);border-radius:4px">
+              <option value="">Recent files...</option>
+            </select>
+            <button class="btn btn-secondary" onclick="pickPlaneFile()" style="font-size:10px;padding:3px 10px">LOAD FILE</button>
+            <input type="file" id="file-input-fallback" accept=".txt,.text" style="display:none">
+          </span>
+          <span id="manual-mode-label" style="display:none;flex:1;font-size:12px;color:var(--text-dim);font-style:italic">Constraint calculator</span>
         </div>
         <div class="divider"></div>
         <div class="field-row">
@@ -498,10 +548,15 @@
         </div>
         <div class="field-row">
           <label>Machining ref</label>
-          <select id="in-machmode" style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:11px">
+          <select id="in-machmode">
             <option value="center">Tool center point</option>
             <option value="radius">Tool radius (edge)</option>
           </select>
+        </div>
+        <div class="field-row">
+          <label>Safety margin</label>
+          <input type="number" id="in-warntolerance" value="20" step="1" placeholder="20" min="0">
+          <span class="unit">mm</span>
         </div>
         <div class="divider"></div>
         <div class="field-row">
@@ -515,10 +570,11 @@
           <span class="unit">mm</span>
         </div>
         <div class="field-row">
-          <label>Clearance height</label>
+          <label>Part clearance height</label>
           <input type="number" id="in-clearanceheight" value="" step="0.1" placeholder="optional" min="0">
           <span class="unit">mm</span>
         </div>
+        <button class="btn btn-secondary" id="btn-calc-now" onclick="document.getElementById('chk-manual-mode').checked ? calculateManual() : window.calculate();" style="width:100%;margin-top:8px;padding:6px 0;font-size:11px;border-color:var(--green);color:var(--green)">CALCULATE</button>
       </div>
     </div>
 
@@ -528,17 +584,16 @@
         <h2>Batch Results <span id="batch-count" style="color:var(--text);font-weight:400"></span></h2>
         <span class="toggle">&#9660;</span>
       </div>
-      <div class="section-body" style="padding:6px 8px;overflow:visible">
+      <div class="section-body" style="padding:6px 8px">
         <div id="batch-filters" class="batch-filter-bar"></div>
         <div class="batch-scroll">
           <table class="batch-table">
             <thead><tr>
               <th>Name</th>
-              <th>A°</th>
               <th>C°</th>
-              <th>Mach</th>
-              <th>Clr</th>
-              <th>C_min</th>
+              <th>A°</th>
+              <th>Machining</th>
+              <th>Clearance</th>
             </tr></thead>
             <tbody id="batch-tbody"></tbody>
           </table>
@@ -546,15 +601,16 @@
       </div>
     </div>
 
-    <!-- Z-Limit & Angle Analysis -->
-    <div class="section hidden" id="sec-analysis">
-      <div class="section-header" onclick="toggleSection('sec-analysis')">
-        <h2>Z-Limit & Angle Analysis</h2>
-        <span class="toggle">&#9660;</span>
+    <!-- Results Dashboard -->
+    <div id="sec-results" class="hidden">
+      <div id="result-angles" style="text-align:center;padding:10px 0 6px 0">
+        <span id="file-angles-header" style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);display:block;margin-bottom:2px">Plane Angles</span>
+        <span id="val-C" style="font-size:28px;font-weight:700;color:var(--text)"></span>
+        <span id="val-A" style="font-size:16px;color:var(--text-dim);margin-left:14px"></span>
+        <span id="manual-angles-header" style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);display:none;margin-bottom:2px">Angle Constraints</span>
       </div>
-      <div class="section-body">
-        <div id="analysis-content"></div>
-      </div>
+      <div id="result-cards" style="display:flex;gap:8px;margin-bottom:10px"></div>
+      <div id="result-details" style="display:flex;flex-direction:column;gap:2px"></div>
     </div>
 
     <!-- Parsed Plane Info (collapsed by default) -->
@@ -591,6 +647,26 @@
 
   <div class="right-panel">
     <canvas id="three-canvas"></canvas>
+    <canvas id="arc-gauge" width="160" height="180" style="position:absolute;top:10px;left:10px;pointer-events:none;display:none"></canvas>
+    <div id="arc-gauge-toggle" style="position:absolute;top:192px;left:10px;z-index:100;display:none;
+      font-size:10px;color:var(--text-dim);background:rgba(20,28,38,0.9);
+      border:1px solid var(--border);border-radius:3px;padding:2px 8px;cursor:pointer;
+      user-select:none">Machining &#9656;</div>
+    <div id="arc-gauge-info" style="position:absolute;top:10px;left:180px;z-index:100;display:none;
+      pointer-events:none;font-family:'JetBrains Mono',Consolas,monospace;font-size:11px;
+      color:var(--text-dim);display:flex;gap:16px"></div>
+    <div id="status-badges" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);
+      z-index:100;display:none;gap:12px;pointer-events:none;
+      font-family:'JetBrains Mono',Consolas,monospace">
+      <div id="badge-machining" style="text-align:center">
+        <div style="color:var(--amber);font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:3px">MACHINING</div>
+        <div id="badge-machining-box" style="padding:6px 16px;border-radius:4px;font-size:13px;font-weight:700;color:#fff"></div>
+      </div>
+      <div id="badge-clearance" style="text-align:center">
+        <div style="color:var(--blue);font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:3px">PART CLEARANCE</div>
+        <div id="badge-clearance-box" style="padding:6px 16px;border-radius:4px;font-size:13px;font-weight:700;color:#fff"></div>
+      </div>
+    </div>
     <!-- 3D scene labels rendered here -->
     <div class="view-buttons">
       <button onclick="setView('top')" title="Top view">Top</button>
@@ -598,8 +674,24 @@
       <button onclick="setView('back')" title="Back view">Back</button>
       <button onclick="setView('right')" title="Right view">Right</button>
       <button onclick="setView('left')" title="Left view">Left</button>
+      <label style="display:flex;align-items:center;gap:3px;background:rgba(20,28,38,0.85);border:1px solid var(--border);border-radius:3px;padding:3px 8px;font-size:10px;color:var(--text-dim);cursor:pointer;margin-left:8px">
+        <input type="checkbox" id="chk-edge-mode" style="margin:0"> Tool at edge
+      </label>
+      <label style="display:flex;align-items:center;gap:3px;background:rgba(20,28,38,0.85);border:1px solid var(--border);border-radius:3px;padding:3px 8px;font-size:10px;color:var(--text-dim);cursor:pointer">
+        <input type="checkbox" id="chk-ghost-tool" checked style="margin:0"> Tool Max Z
+      </label>
+      <label style="display:flex;align-items:center;gap:3px;background:rgba(20,28,38,0.85);border:1px solid var(--border);border-radius:3px;padding:3px 8px;font-size:10px;color:var(--text-dim);cursor:pointer">
+        <input type="checkbox" id="chk-reach-tool" checked style="margin:0"> Tool Min Z
+      </label>
     </div>
   </div>
+</div>
+
+<div style="position:fixed;bottom:8px;right:8px;background:var(--bg-section);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-family:'JetBrains Mono',Consolas,monospace;z-index:50">
+  <div style="font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Accessibility</div>
+  <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-dim);cursor:pointer">
+    <input type="checkbox" id="chk-colorblind" style="margin:0"> Colorblind mode
+  </label>
 </div>
 
 <script type="importmap">
@@ -742,6 +834,42 @@ let planeOverrides = {}; // { index: { zFeature, zStone } }
 let batchFilter = 'all'; // 'all', 'problems', 'used'
 let batchRawText = '';   // original full batch text for re-calculation
 let showAdjusted3D = false; // toggle for adjusted vector in 3D scene
+let arcGaugeMode = 1;       // 0=clearance, 1=machining
+let lastGaugeArgs = null;   // cached args for re-draw on mode toggle
+let showGhostTool = true;   // toggle for Tool Max Z (upper Z limit)
+let showReachTool = true;   // toggle for Tool Min Z (lower Z limit)
+let colorblindMode = false;
+
+// ─── Color accessor system ───
+const COLORS_NORMAL = { green: '#00ff88', red: '#ff4444', amber: '#ffaa00', blue: '#58a6ff', orange: '#ff6b35' };
+const COLORS_CB     = { green: '#0072B2', red: '#D55E00', amber: '#F0E442', blue: '#CC79A7', orange: '#E8751A' };
+function SC(name) { return (colorblindMode ? COLORS_CB : COLORS_NORMAL)[name]; }
+function SCrgba(name, alpha) {
+  const hex = SC(name);
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+function SChex(name) { return parseInt(SC(name).slice(1), 16); }
+function applyColorMode() {
+  const c = colorblindMode ? COLORS_CB : COLORS_NORMAL;
+  const s = document.documentElement.style;
+  s.setProperty('--green', c.green);
+  s.setProperty('--red', c.red);
+  s.setProperty('--amber', c.amber);
+  s.setProperty('--blue', c.blue);
+  s.setProperty('--orange', c.orange);
+  // Derived semi-transparent variants
+  s.setProperty('--green-bg15', SCrgba('green', 0.15));
+  s.setProperty('--green-bg12', SCrgba('green', 0.12));
+  s.setProperty('--green-bg25', SCrgba('green', 0.25));
+  s.setProperty('--green-border', SCrgba('green', 0.3));
+  s.setProperty('--red-bg15', SCrgba('red', 0.15));
+  s.setProperty('--red-bg12', SCrgba('red', 0.12));
+  s.setProperty('--red-border', SCrgba('red', 0.3));
+  s.setProperty('--amber-bg15', SCrgba('amber', 0.15));
+  s.setProperty('--amber-bg12', SCrgba('amber', 0.12));
+  s.setProperty('--amber-border', SCrgba('amber', 0.3));
+}
 
 // ═══════════════════════════════════════════════════
 // CORE MATH
@@ -762,6 +890,16 @@ function aDisplayDeg(A) {
   if (d > 180) d -= 360;
   if (d < -180) d += 360;
   return d;
+}
+
+// Find where a ray from center at angle A intersects the stone rectangle boundary
+function getEdgeIntersection(A, halfW, halfD) {
+  const dx = Math.cos(A);
+  const dy = Math.sin(A);
+  let t = Infinity;
+  if (dx !== 0) t = Math.min(t, Math.abs(halfW / dx));
+  if (dy !== 0) t = Math.min(t, Math.abs(halfD / dy));
+  return { x: dx * t, y: dy * t };
 }
 
 function calcZPivot(zFeature, toolLen, C) {
@@ -848,11 +986,13 @@ window.calculate = function() {
     const toolRadiusVal = document.getElementById('in-toolradius').value;
     const toolRadius = toolRadiusVal ? parseFloat(toolRadiusVal) : 0;
     const machMode = document.getElementById('in-machmode').value; // 'center' or 'radius'
+    const warnToleranceVal = document.getElementById('in-warntolerance').value;
+    const warnTolerance = warnToleranceVal ? parseFloat(warnToleranceVal) : 20;
     const partHeightVal = document.getElementById('in-partheight').value;
     const clearanceHeightVal = document.getElementById('in-clearanceheight').value;
     if (isNaN(toolLen) || toolLen <= 0) throw new Error('Tool length is required and must be > 0');
     if (isNaN(zLimit)) throw new Error('Z limit is required');
-    if (!planeText.trim()) throw new Error('Paste Mastercam plane data');
+    if (!planeText.trim()) throw new Error('Load a file');
     if (isNaN(zFeature)) throw new Error('Z machining level is required');
 
     // Auto-detect batch mode: if dashed separators exist, try multi-plane parse
@@ -864,7 +1004,6 @@ window.calculate = function() {
         batchActiveIdx = -1;
         calculateBatch();
         saveSettings();
-        collapseInputSections();
         return;
       }
     }
@@ -919,7 +1058,7 @@ window.calculate = function() {
     if (cMinFeature !== null && cMinStone !== null) {
       if (cMinStone > cMinFeature) {
         cMinBinding = cMinStone;
-        bindingSource = 'clearance level';
+        bindingSource = 'part clearance level';
       } else {
         cMinBinding = cMinFeature;
         bindingSource = 'machining level';
@@ -929,15 +1068,16 @@ window.calculate = function() {
       bindingSource = 'machining level';
     } else if (cMinStone !== null) {
       cMinBinding = cMinStone;
-      bindingSource = 'clearance level';
+      bindingSource = 'part clearance level';
     }
 
     showAnalysis({
-      zLimit, C,
+      zLimit, C, A,
       zPivotFeature, featureOk, cMinFeature,
       zPivotStone, stoneOk, cMinStone,
       cMinBinding, bindingSource,
       zLowerLimit, reachable, cMaxReach,
+      warnTolerance,
     });
 
     // Adjusted plane — only when current angle doesn't clear limits
@@ -1003,14 +1143,397 @@ window.calculate = function() {
       calculateBatch();
     }
 
-    // Auto-collapse input sections after successful calculation
-    collapseInputSections();
-
   } catch (e) {
     errEl.textContent = e.message;
     errEl.classList.remove('hidden');
   }
 };
+
+// ═══════════════════════════════════════════════════
+// MANUAL MODE — CONSTRAINT ANGLE CALCULATOR
+// ═══════════════════════════════════════════════════
+function toggleManualMode(enabled) {
+  const fileRow = document.getElementById('file-picker-row');
+  const manualLabel = document.getElementById('manual-mode-label');
+  const refreshBtn = document.getElementById('btn-refresh-file');
+  fileRow.style.display = enabled ? 'none' : 'contents';
+  manualLabel.style.display = enabled ? 'inline' : 'none';
+  if (enabled) {
+    refreshBtn.classList.add('hidden');
+  } else {
+    // Restore refresh button if a file was previously loaded
+    const fileName = document.getElementById('file-name').textContent;
+    if (fileName && fileName !== 'No file loaded') {
+      refreshBtn.classList.remove('hidden');
+    }
+  }
+  // Hide sections not relevant to the target mode
+  if (enabled) {
+    ['sec-parsed', 'sec-adjusted', 'sec-batch'].forEach(id => {
+      document.getElementById(id).classList.add('hidden');
+    });
+    const badgesEl = document.getElementById('status-badges');
+    if (badgesEl) badgesEl.style.display = 'none';
+  } else {
+    // Switching to file mode — hide manual results until recalculated
+    document.getElementById('sec-results').classList.add('hidden');
+    // Clear manual scene
+    clearSceneObjects();
+    clearLabels();
+    hideArcGauge();
+  }
+  // Re-frame camera and recalculate for the new mode
+  hasFramedOnce = false;
+  if (enabled && manualState) {
+    calculateManual();
+  } else if (!enabled && currentState) {
+    calculate();
+  }
+  saveSettings();
+}
+
+window.calculateManual = function calculateManual() {
+  const errEl = document.getElementById('error-display');
+  errEl.classList.add('hidden');
+  errEl.textContent = '';
+
+  try {
+    const zLimit = -Math.abs(parseFloat(document.getElementById('in-zlimit').value));
+    const toolLen = parseFloat(document.getElementById('in-toollen').value);
+    const zFeature = -Math.abs(parseFloat(document.getElementById('in-zfeature').value));
+    const zTravelVal = document.getElementById('in-ztravel').value;
+    const zTravel = zTravelVal ? parseFloat(zTravelVal) : null;
+    const zLowerLimit = (zTravel !== null) ? zLimit + zTravel : null;
+    const toolRadiusVal = document.getElementById('in-toolradius').value;
+    const toolRadius = toolRadiusVal ? parseFloat(toolRadiusVal) : 0;
+    const machMode = document.getElementById('in-machmode').value;
+    const partHeightVal = document.getElementById('in-partheight').value;
+    const clearanceHeightVal = document.getElementById('in-clearanceheight').value;
+
+    if (isNaN(toolLen) || toolLen <= 0) throw new Error('Tool length is required and must be > 0');
+    if (isNaN(zLimit)) throw new Error('Z limit is required');
+    if (isNaN(zFeature)) throw new Error('Z machining level is required');
+
+    const useRadiusMode = (machMode === 'radius');
+    const partHeight = partHeightVal ? parseFloat(partHeightVal) : null;
+    const clearanceHeight = clearanceHeightVal ? parseFloat(clearanceHeightVal) : null;
+    const zStone = (partHeight !== null && clearanceHeight !== null) ? -(partHeight + clearanceHeight) : null;
+
+    // Constraint angles (same math as main calculate)
+    const cMinFeatureRef = useRadiusMode ? zFeature - toolRadius : zFeature;
+    const halfPi = Math.PI / 2;
+    const cMinFeatureRaw = calcCMin(cMinFeatureRef, zLimit, toolLen);
+    const cMinStoneRaw = (zStone !== null) ? calcCMin(zStone - toolRadius, zLimit, toolLen) : null;
+    const cMaxReachRaw = (zLowerLimit !== null) ? calcCMin(cMinFeatureRef, zLowerLimit, toolLen) : null;
+
+    // Interpret: angles > 90° are physically impossible (machine can't tilt past 90°)
+    // cMinFeature/cMinStone > 90° → impossible to satisfy at any angle
+    // cMaxReach > 90° → reachability is never an issue (treat as no constraint)
+    const featureImpossible = cMinFeatureRaw !== null && cMinFeatureRaw > halfPi;
+    const stoneImpossible = cMinStoneRaw !== null && cMinStoneRaw > halfPi;
+    const cMinFeature = featureImpossible ? null : cMinFeatureRaw;
+    const cMinStone = stoneImpossible ? null : cMinStoneRaw;
+    const cMaxReach = (cMaxReachRaw !== null && cMaxReachRaw > halfPi) ? null : cMaxReachRaw;
+
+    // Warning tolerance
+    const warnToleranceVal = document.getElementById('in-warntolerance').value;
+    const wt = warnToleranceVal ? parseFloat(warnToleranceVal) : 20;
+
+    // Warning angles: where Z margin = warnTolerance (shift limit by wt)
+    let cWarnFeatureRaw = (cMinFeatureRaw !== null) ? calcCMin(cMinFeatureRef, zLimit - wt, toolLen) : null;
+    let cWarnStoneRaw = (cMinStoneRaw !== null) ? calcCMin(zStone - toolRadius, zLimit - wt, toolLen) : null;
+    let cWarnReachRaw = (cMaxReachRaw !== null && zLowerLimit !== null) ? calcCMin(cMinFeatureRef, zLowerLimit + wt, toolLen) : null;
+    // Clamp warning angles >90° to null (warning zone extends to full range)
+    const cWarnFeature = (cWarnFeatureRaw !== null && cWarnFeatureRaw <= halfPi) ? cWarnFeatureRaw : null;
+    const cWarnStone = (cWarnStoneRaw !== null && cWarnStoneRaw <= halfPi) ? cWarnStoneRaw : null;
+    const cWarnReach = (cWarnReachRaw !== null && cWarnReachRaw <= halfPi) ? cWarnReachRaw : null;
+
+    // Binding constraint (whichever requires more tilt)
+    let cMinBinding = null;
+    let bindingSource = '';
+    if (cMinFeature !== null && cMinStone !== null) {
+      if (cMinStone > cMinFeature) { cMinBinding = cMinStone; bindingSource = 'part clearance'; }
+      else { cMinBinding = cMinFeature; bindingSource = 'machining'; }
+    } else if (cMinFeature !== null) { cMinBinding = cMinFeature; bindingSource = 'machining'; }
+    else if (cMinStone !== null) { cMinBinding = cMinStone; bindingSource = 'part clearance'; }
+
+    // Binding warning (largest warning angle from steepest constraints)
+    const cWarnBinding = Math.max(cWarnFeature || 0, cWarnStone || 0) || null;
+
+    // Display results
+    displayManualResults(cMinFeature, cMinStone, cMaxReach, cMinBinding, bindingSource,
+      featureImpossible, stoneImpossible, zLowerLimit,
+      cWarnFeature, cWarnStone, cWarnReach, cWarnBinding, wt);
+
+    // Draw arc gauge (no current C needle) — pass warning angles
+    drawArcGauge(null, 0, 90, cMinFeature !== null ? toDeg(cMinFeature) : null,
+      cMinStone !== null ? toDeg(cMinStone) : null,
+      cMaxReach !== null ? toDeg(cMaxReach) : null,
+      null, null, null, null, null, null,
+      cWarnFeature !== null ? toDeg(cWarnFeature) : null,
+      cWarnStone !== null ? toDeg(cWarnStone) : null,
+      cWarnReach !== null ? toDeg(cWarnReach) : null);
+
+    // Update 3D scene (only pass valid angles for tool rendering)
+    manualState = { zFeature, zLimit, toolLen, toolRadius, machMode, zStone, partHeight,
+      zLowerLimit, cMinFeature, cMinStone, cMaxReach, useRadiusMode };
+    updateManualScene();
+
+    // Hide plane-specific sections and status badges
+    ['sec-parsed', 'sec-adjusted', 'sec-batch'].forEach(id => {
+      document.getElementById(id).classList.add('hidden');
+    });
+    const badgesEl = document.getElementById('status-badges');
+    if (badgesEl) badgesEl.style.display = 'none';
+
+    saveSettings();
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  }
+};
+
+let manualState = null;
+
+function displayManualResults(cMinFeature, cMinStone, cMaxReach, cMinBinding, bindingSource,
+    featureImpossible, stoneImpossible, zLowerLimit,
+    cWarnFeature, cWarnStone, cWarnReach, cWarnBinding, wt) {
+  const sec = document.getElementById('sec-results');
+  sec.classList.remove('hidden');
+
+  const cMinFDeg = cMinFeature !== null ? toDeg(cMinFeature) : null;
+  const cMinSDeg = cMinStone !== null ? toDeg(cMinStone) : null;
+  const cMaxRDeg = cMaxReach !== null ? toDeg(cMaxReach) : null;
+  const cMinBDeg = cMinBinding !== null ? toDeg(cMinBinding) : null;
+  const cWarnFDeg = cWarnFeature !== null ? toDeg(cWarnFeature) : null;
+  const cWarnSDeg = cWarnStone !== null ? toDeg(cWarnStone) : null;
+  const cWarnRDeg = cWarnReach !== null ? toDeg(cWarnReach) : null;
+  const cWarnBDeg = cWarnBinding !== null ? toDeg(cWarnBinding) : null;
+
+  // Header — toggle visibility, don't destroy file mode elements
+  document.getElementById('file-angles-header').style.display = 'none';
+  document.getElementById('val-C').style.display = 'none';
+  document.getElementById('val-A').style.display = 'none';
+  document.getElementById('manual-angles-header').style.display = 'block';
+
+  // Cards
+  const cardsEl = document.getElementById('result-cards');
+  let cardsHtml = '';
+
+  // Machining constraint card
+  if (cMinFDeg !== null) {
+    const isBinding = bindingSource === 'machining';
+    const warnZoneF = (cWarnFDeg !== null && cWarnFDeg > cMinFDeg) ?
+      `<div style="font-size:8px;color:var(--orange);margin-top:3px;opacity:0.8">\u26A0 ${cMinFDeg.toFixed(1)}\u00B0\u2013${cWarnFDeg.toFixed(1)}\u00B0 within ${wt}mm safety margin</div>` : '';
+    cardsHtml += `<div style="flex:1;background:${SCrgba('amber', 0.12)};border:1px solid ${SCrgba('amber', 0.3)};border-radius:6px;padding:8px 10px;text-align:center">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--amber);margin-bottom:4px">Steepest (machining)</div>
+      <div style="font-size:22px;font-weight:700;color:var(--amber)">${cMinFDeg.toFixed(1)}\u00B0</div>
+      ${isBinding ? '<div style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:var(--amber);margin-top:2px">BINDING</div>' : ''}
+      ${warnZoneF}
+    </div>`;
+  } else if (featureImpossible) {
+    cardsHtml += `<div style="flex:1;background:${SCrgba('red', 0.12)};border:1px solid ${SCrgba('red', 0.3)};border-radius:6px;padding:8px 10px;text-align:center">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--amber);margin-bottom:4px">Steepest (machining)</div>
+      <div style="font-size:14px;font-weight:700;color:var(--red)">IMPOSSIBLE</div>
+      <div style="font-size:8px;color:var(--text-dim);margin-top:2px">Tool too short for this Z depth</div>
+    </div>`;
+  }
+
+  // Part clearance constraint card
+  if (cMinSDeg !== null) {
+    const isBinding = bindingSource === 'part clearance';
+    const warnZoneS = (cWarnSDeg !== null && cWarnSDeg > cMinSDeg) ?
+      `<div style="font-size:8px;color:var(--orange);margin-top:3px;opacity:0.8">\u26A0 ${cMinSDeg.toFixed(1)}\u00B0\u2013${cWarnSDeg.toFixed(1)}\u00B0 within ${wt}mm safety margin</div>` : '';
+    cardsHtml += `<div style="flex:1;background:${SCrgba('blue', 0.12)};border:1px solid ${SCrgba('blue', 0.3)};border-radius:6px;padding:8px 10px;text-align:center">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:4px">Steepest (clearance)</div>
+      <div style="font-size:22px;font-weight:700;color:var(--blue)">${cMinSDeg.toFixed(1)}\u00B0</div>
+      ${isBinding ? '<div style="font-size:8px;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-top:2px">BINDING</div>' : ''}
+      ${warnZoneS}
+    </div>`;
+  } else if (stoneImpossible) {
+    cardsHtml += `<div style="flex:1;background:${SCrgba('red', 0.12)};border:1px solid ${SCrgba('red', 0.3)};border-radius:6px;padding:8px 10px;text-align:center">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:4px">Steepest (clearance)</div>
+      <div style="font-size:14px;font-weight:700;color:var(--red)">IMPOSSIBLE</div>
+      <div style="font-size:8px;color:var(--text-dim);margin-top:2px">Cannot clear part at any angle</div>
+    </div>`;
+  }
+
+  // Reachability constraint card
+  if (cMaxRDeg !== null) {
+    const warnZoneR = (cWarnRDeg !== null && cWarnRDeg < cMaxRDeg) ?
+      `<div style="font-size:8px;color:var(--orange);margin-top:3px;opacity:0.8">\u26A0 ${cWarnRDeg.toFixed(1)}\u00B0\u2013${cMaxRDeg.toFixed(1)}\u00B0 within ${wt}mm safety margin</div>` : '';
+    cardsHtml += `<div style="flex:1;background:${SCrgba('green', 0.12)};border:1px solid ${SCrgba('green', 0.3)};border-radius:6px;padding:8px 10px;text-align:center">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:4px">Shallowest (reachable)</div>
+      <div style="font-size:22px;font-weight:700;color:var(--green)">${cMaxRDeg.toFixed(1)}\u00B0</div>
+      ${warnZoneR}
+    </div>`;
+  }
+
+  // Handle no constraints
+  if (!cardsHtml) {
+    cardsHtml = '<div style="flex:1;text-align:center;color:var(--text-dim);padding:12px">No angle constraints \u2014 all angles are safe</div>';
+  }
+  cardsEl.innerHTML = cardsHtml;
+
+  // Details: safe range summary
+  const detailsEl = document.getElementById('result-details');
+  let detailHtml = '';
+  if (featureImpossible || stoneImpossible) {
+    detailHtml = `<div style="text-align:center;padding:6px 0;font-size:13px;color:var(--red);font-weight:700">
+      No safe C range \u2014 ${featureImpossible ? 'machining level' : 'part clearance'} impossible at any angle
+    </div>`;
+  } else if (cMinBDeg !== null && cMaxRDeg !== null) {
+    if (cMinBDeg <= cMaxRDeg) {
+      const comfortLow = cWarnBDeg !== null ? cWarnBDeg : cMinBDeg;
+      const comfortHigh = cWarnRDeg !== null ? cWarnRDeg : cMaxRDeg;
+      const hasComfort = comfortLow > cMinBDeg || comfortHigh < cMaxRDeg;
+      detailHtml = `<div style="text-align:center;padding:6px 0;font-size:13px;color:var(--text)">
+        Safe C range: <span style="font-weight:700;color:var(--green)">${cMinBDeg.toFixed(1)}\u00B0 \u2013 ${cMaxRDeg.toFixed(1)}\u00B0</span>
+      </div>`;
+      if (hasComfort && comfortLow <= comfortHigh) {
+        detailHtml += `<div style="text-align:center;padding:2px 0;font-size:11px;color:var(--text-dim)">
+          With ${wt}mm safety margin: <span style="color:var(--green)">${comfortLow.toFixed(1)}\u00B0 \u2013 ${comfortHigh.toFixed(1)}\u00B0</span>
+        </div>`;
+      } else if (hasComfort) {
+        detailHtml += `<div style="text-align:center;padding:2px 0;font-size:11px;color:var(--orange)">
+          Entire safe range is within ${wt}mm safety margin
+        </div>`;
+      }
+    } else {
+      detailHtml = `<div style="text-align:center;padding:6px 0;font-size:13px;color:var(--red);font-weight:700">
+        No safe C range \u2014 steepest constraint (${cMinBDeg.toFixed(1)}\u00B0) exceeds shallowest reachable (${cMaxRDeg.toFixed(1)}\u00B0)
+      </div>`;
+    }
+  } else if (cMinBDeg !== null) {
+    const reason = zLowerLimit !== null
+      ? 'no shallow angle limit (tool can reach at all angles)'
+      : 'no shallow angle limit (Z travel not set)';
+    detailHtml = `<div style="text-align:center;padding:6px 0;font-size:13px;color:var(--text)">
+      Min C: <span style="font-weight:700">${cMinBDeg.toFixed(1)}\u00B0</span> \u2014 ${reason}
+    </div>`;
+  } else {
+    detailHtml = `<div style="text-align:center;padding:6px 0;font-size:13px;color:var(--green)">
+      All C angles are safe within machine limits
+    </div>`;
+  }
+  detailsEl.innerHTML = detailHtml;
+}
+
+function updateManualScene() {
+  if (!manualState) return;
+  const s = manualState;
+  const fz = s.zFeature;
+
+  clearSceneObjects();
+
+  const zRange = Math.abs(s.zLimit);
+  const sceneScale = Math.max(s.toolLen, zRange, 400);
+
+  const tableZ = machineZToDisplay(0, fz);
+  const zLimitZ = machineZToDisplay(s.zLimit, fz);
+
+  buildTable(new THREE.Vector3(0, 0, tableZ));
+  buildZLimitPlane(s.zLimit, fz);
+  if (s.zLowerLimit !== null) {
+    buildZLowerLimitPlane(s.zLowerLimit, fz, sceneScale);
+  }
+  buildMachiningPlane(sceneScale);
+
+  if (s.partHeight !== null || s.zStone !== null) {
+    buildStone(s.partHeight, s.zStone, fz, sceneScale);
+  }
+
+  // Build tool vectors at each constraint angle (A=0 for clean side view)
+  const radiusOffset = (cAngle) => s.toolRadius * Math.sin(cAngle);
+
+  if (s.cMinFeature !== null) {
+    const C = s.cMinFeature;
+    const normal = [Math.sin(C), 0, Math.cos(C)];
+    const rOff = s.useRadiusMode ? radiusOffset(C) : 0;
+    buildToolVector(new THREE.Vector3(0, 0, 0), normal, s.toolLen, SChex('amber'), 'manualToolFeature', sceneScale, s.toolRadius, rOff || undefined);
+    // Label
+    const dispDir = new THREE.Vector3(-normal[0], 0, -normal[2]).normalize();
+    const pivotPos = dispDir.clone().multiplyScalar(-s.toolLen);
+    pivotPos.z += rOff;
+    addLabel(pivotPos.clone().add(new THREE.Vector3(sceneScale * 0.05, 0, sceneScale * 0.05)),
+      `Steepest machining: ${toDeg(C).toFixed(1)}\u00B0`, 'label-amber');
+  }
+
+  if (s.cMinStone !== null) {
+    const C = s.cMinStone;
+    const normal = [Math.sin(C), 0, Math.cos(C)];
+    const rOff = radiusOffset(C);
+    const stoneDisplayZ = machineZToDisplay(s.zStone, fz);
+    // featureZOffset positions tool tip at stone level + radius offset
+    buildToolVector(new THREE.Vector3(0, 0, 0), normal, s.toolLen, SChex('blue'), 'manualToolStone', sceneScale, s.toolRadius, stoneDisplayZ + rOff);
+    const dispDir = new THREE.Vector3(-normal[0], 0, -normal[2]).normalize();
+    const pivotPos = new THREE.Vector3(0, 0, stoneDisplayZ + rOff).add(dispDir.clone().multiplyScalar(-s.toolLen));
+    addLabel(pivotPos.clone().add(new THREE.Vector3(sceneScale * 0.05, 0, -sceneScale * 0.05)),
+      `Steepest clearance: ${toDeg(C).toFixed(1)}\u00B0`, 'label-blue');
+  }
+
+  if (s.cMaxReach !== null) {
+    const C = s.cMaxReach;
+    const normal = [Math.sin(C), 0, Math.cos(C)];
+    const rOff = s.useRadiusMode ? radiusOffset(C) : 0;
+    buildToolVector(new THREE.Vector3(0, 0, 0), normal, s.toolLen, SChex('green'), 'manualToolReach', sceneScale, s.toolRadius, rOff || undefined);
+    const dispDir = new THREE.Vector3(-normal[0], 0, -normal[2]).normalize();
+    const pivotPos = dispDir.clone().multiplyScalar(-s.toolLen);
+    pivotPos.z += rOff;
+    addLabel(pivotPos.clone().add(new THREE.Vector3(-sceneScale * 0.05, 0, sceneScale * 0.05)),
+      `Shallowest reachable: ${toDeg(C).toFixed(1)}\u00B0`, 'label-green');
+  }
+
+  addLabel(new THREE.Vector3(sceneScale * 0.15, 0, -sceneScale * 0.15),
+    `Machining Level (Z=${Math.abs(fz)})`, 'label-amber');
+
+  if (!hasFramedOnce) {
+    autoFrameManualCamera(s, sceneScale);
+    hasFramedOnce = true;
+  }
+}
+
+function autoFrameManualCamera(s, sceneScale) {
+  const fz = s.zFeature;
+  const tableZ = machineZToDisplay(0, fz);
+  const zLimitZ = machineZToDisplay(s.zLimit, fz);
+
+  const points = [
+    new THREE.Vector3(0, 0, 0),       // feature
+    new THREE.Vector3(0, 0, tableZ),   // table
+    new THREE.Vector3(0, 0, zLimitZ),  // z limit
+    // Table corners for framing (same as file mode)
+    new THREE.Vector3(TABLE_X / 2, TABLE_Y / 2, tableZ),
+    new THREE.Vector3(-TABLE_X / 2, -TABLE_Y / 2, tableZ),
+  ];
+  if (s.zStone !== null) {
+    points.push(new THREE.Vector3(0, 0, machineZToDisplay(s.zStone, fz)));
+  }
+  // Add tool tip positions for each constraint
+  [s.cMinFeature, s.cMinStone, s.cMaxReach].forEach(C => {
+    if (C !== null) {
+      const dispDir = new THREE.Vector3(-Math.sin(C), 0, -Math.cos(C));
+      const pivot = dispDir.clone().multiplyScalar(-s.toolLen);
+      points.push(pivot);
+    }
+  });
+
+  const box = new THREE.Box3();
+  points.forEach(p => box.expandByPoint(p));
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const maxDim = Math.max(size.x, size.y, size.z, sceneScale * 0.5);
+
+  controls.target.copy(center);
+  camera.position.set(
+    center.x + maxDim * 0.8,
+    center.y - maxDim * 1.0,
+    center.z + maxDim * 0.6
+  );
+  controls.update();
+}
 
 // ═══════════════════════════════════════════════════
 // UI DISPLAY FUNCTIONS
@@ -1039,11 +1562,12 @@ function showParsed(plane, A, C) {
 }
 
 function showAnalysis(a) {
-  const sec = document.getElementById('sec-analysis');
+  const sec = document.getElementById('sec-results');
   sec.classList.remove('hidden');
-  const el = document.getElementById('analysis-content');
+  const wt = a.warnTolerance || 20;
 
   const currentC = toDeg(a.C);
+  const currentA = toDeg(a.A);
   const cAxisMax = 90;
   const cMinFeatureDeg = a.cMinFeature !== null ? toDeg(a.cMinFeature) : null;
   const cMinStoneDeg = a.cMinStone !== null ? toDeg(a.cMinStone) : null;
@@ -1051,120 +1575,188 @@ function showAnalysis(a) {
   const cMaxReachDeg = a.cMaxReach !== null ? toDeg(a.cMaxReach) : null;
   const rangeMin = cMinDeg !== null ? cMinDeg : 0;
   const rangeMax = cMaxReachDeg !== null ? Math.min(cMaxReachDeg, cAxisMax) : cAxisMax;
+
+  // --- Angle header --- restore file mode elements, hide manual header
+  document.getElementById('file-angles-header').style.display = 'block';
+  document.getElementById('val-C').style.display = '';
+  document.getElementById('val-A').style.display = '';
+  document.getElementById('manual-angles-header').style.display = 'none';
+  document.getElementById('val-C').textContent = `C: ${currentC.toFixed(2)}\u00b0`;
+  document.getElementById('val-A').textContent = `A: ${currentA.toFixed(2)}\u00b0`;
+
+  // --- Status cards ---
+  const cardsEl = document.getElementById('result-cards');
+  let cardsHtml = '';
+
+  // Helper: status class from ok + margin
+  function cardClass(ok, marginMm) {
+    if (!ok) return 'card-fail';
+    return marginMm < wt ? 'card-warn' : 'card-ok';
+  }
+  function badgeText(ok, failLabel, marginMm) {
+    if (!ok) return `<span style="color:var(--red)">${failLabel}</span>`;
+    if (marginMm < wt) return `<span style="color:var(--orange)">CLOSE</span>`;
+    return `<span style="color:var(--green)">OK</span>`;
+  }
+  function marginText(mm, ok) {
+    const col = !ok ? 'var(--red)' : (mm < wt ? 'var(--amber)' : 'var(--green)');
+    return `<span style="color:${col}">${mm >= 0 ? '+' : ''}${mm.toFixed(1)} mm</span>`;
+  }
+
+  // Machining card — combined machining + reachability
+  const machMargin = a.zPivotFeature - a.zLimit;
+  const reachMargin = (a.zLowerLimit !== null) ? a.zLowerLimit - a.zPivotFeature : null;
+  const machOk = a.featureOk && (a.reachable === null || a.reachable);
+  const machWorstMargin = (reachMargin !== null) ? Math.min(machMargin, reachMargin) : machMargin;
+  const machFailLabel = !a.featureOk ? 'EXCEEDED' : 'UNREACHABLE';
+  cardsHtml += `<div class="status-card ${cardClass(machOk, machWorstMargin)}" onclick="toggleDetailRow('detail-mach')">
+    <div class="card-label">Machining</div>
+    <div class="card-badge">${badgeText(machOk, machFailLabel, machWorstMargin)}</div>
+    <div class="card-margin">${marginText(machWorstMargin, machOk)}</div>
+  </div>`;
+
+  // Clearance card (only if clearance data exists)
+  if (a.zPivotStone !== null) {
+    const clrMargin = a.zPivotStone - a.zLimit;
+    cardsHtml += `<div class="status-card ${cardClass(a.stoneOk, clrMargin)}" onclick="toggleDetailRow('detail-clr')">
+      <div class="card-label">Part Clearance</div>
+      <div class="card-badge">${badgeText(a.stoneOk, 'UPPER Z LIMIT EXCEEDED', clrMargin)}</div>
+      <div class="card-margin">${marginText(clrMargin, a.stoneOk)}</div>
+    </div>`;
+  }
+
+  cardsEl.innerHTML = cardsHtml;
+
+  // --- Arc gauge in 3D view ---
+  drawArcGauge(currentC, rangeMin, rangeMax, cMinFeatureDeg, cMinStoneDeg, cMaxReachDeg,
+    currentA, a.featureOk, a.stoneOk, a.reachable, machMargin, reachMargin);
+
+  // --- Status badges in 3D view ---
+  const badgesEl = document.getElementById('status-badges');
+  if (badgesEl) {
+    badgesEl.style.display = 'flex';
+
+    // Clearance badge box
+    const clrBox = document.getElementById('badge-clearance-box');
+    if (a.zPivotStone !== null) {
+      const clrM = a.zPivotStone - a.zLimit;
+      const clrKey = !a.stoneOk ? 'red' : (clrM < wt ? 'orange' : 'green');
+      const clrText = !a.stoneOk ? 'EXCEEDED' : (clrM < wt ? 'CLOSE TO LIMIT' : 'OK');
+      clrBox.textContent = clrText;
+      clrBox.style.background = SCrgba(clrKey, 0.35);
+      clrBox.style.color = '#fff';
+      document.getElementById('badge-clearance').style.display = '';
+    } else {
+      clrBox.textContent = '—';
+      clrBox.style.background = 'rgba(255,255,255,0.05)';
+      clrBox.style.color = 'var(--text-dim)';
+      document.getElementById('badge-clearance').style.display = '';
+    }
+
+    // Machining badge box
+    const machBox = document.getElementById('badge-machining-box');
+    const machKey = !machOk ? 'red' : (machWorstMargin < wt ? 'orange' : 'green');
+    const machText = !machOk ? machFailLabel : (machWorstMargin < wt ? 'CLOSE TO LIMIT' : 'OK');
+    machBox.textContent = machText;
+    machBox.style.background = SCrgba(machKey, 0.35);
+    machBox.style.color = '#fff';
+  }
+
+  // --- Detail rows ---
+  const detailsEl = document.getElementById('result-details');
+  let dHtml = '';
+
+  // Helper for C_min/C_max detail line
+  function cLimitLine(label, cDeg, delta) {
+    if (cDeg === null) return '';
+    const dClass = delta > 5 ? 'color-green' : (delta >= 0 ? 'color-amber' : 'color-red');
+    return `<span class="lbl">${label}:</span><span class="val">${cDeg.toFixed(2)}&deg; <span class="${dClass}">(${delta >= 0 ? '+' : ''}${delta.toFixed(2)}&deg;)</span></span>`;
+  }
+
+  // Machining detail (combined machining + reachability)
+  const machDeltaC = cMinFeatureDeg !== null ? currentC - cMinFeatureDeg : null;
+  const reachDeltaC = cMaxReachDeg !== null ? cMaxReachDeg - currentC : null;
+  dHtml += `<div class="detail-row" id="detail-mach" onclick="this.classList.toggle('expanded')">
+    <div class="detail-summary">
+      <span class="detail-arrow">&#9654;</span>
+      <span class="detail-label">Machining Level</span>
+    </div>
+    <div class="detail-body"><div class="result-grid">
+      <span class="lbl">Z CoR:</span><span class="val">${a.zPivotFeature.toFixed(2)} mm</span>
+      <span class="lbl">Upper Z limit:</span><span class="val">${a.zLimit.toFixed(2)} mm</span>
+      <span class="lbl">Upper Z margin:</span><span class="val">${marginText(machMargin, a.featureOk)}</span>
+      ${a.zLowerLimit !== null ? `<span class="lbl">Lower Z limit:</span><span class="val">${a.zLowerLimit.toFixed(2)} mm</span>` : ''}
+      ${reachMargin !== null ? `<span class="lbl">Lower Z margin:</span><span class="val">${marginText(reachMargin, a.reachable)}</span>` : ''}
+      ${cMinFeatureDeg !== null ? cLimitLine('C for machining', cMinFeatureDeg, machDeltaC) : ''}
+      ${cMaxReachDeg !== null ? cLimitLine('C to reach mach.', cMaxReachDeg, reachDeltaC) : ''}
+      ${!a.featureOk && cMinFeatureDeg !== null ? `<span class="lbl"></span><span class="val" style="color:var(--red);font-size:11px">Need ${(cMinFeatureDeg - currentC).toFixed(1)}&deg; more tilt</span>` : ''}
+      ${a.reachable === false ? `<span class="lbl"></span><span class="val" style="color:var(--red);font-size:11px">Tool cannot reach machining level at this angle</span>` : ''}
+    </div></div>
+  </div>`;
+
+  // Clearance detail
+  if (a.zPivotStone !== null) {
+    const clrMargin = a.zPivotStone - a.zLimit;
+    const clrDeltaC = cMinStoneDeg !== null ? currentC - cMinStoneDeg : null;
+    dHtml += `<div class="detail-row" id="detail-clr" onclick="this.classList.toggle('expanded')">
+      <div class="detail-summary">
+        <span class="detail-arrow">&#9654;</span>
+        <span class="detail-label">Part Clearance Level</span>
+      </div>
+      <div class="detail-body"><div class="result-grid">
+        <span class="lbl">Z CoR:</span><span class="val">${a.zPivotStone.toFixed(2)} mm</span>
+        <span class="lbl">Z margin:</span><span class="val">${marginText(clrMargin, a.stoneOk)}</span>
+        ${cMinStoneDeg !== null ? cLimitLine('C for part clearance', cMinStoneDeg, clrDeltaC) : ''}
+        ${!a.stoneOk && cMinStoneDeg !== null ? `<span class="lbl"></span><span class="val" style="color:var(--red);font-size:11px">Need ${(cMinStoneDeg - currentC).toFixed(1)}&deg; more tilt</span>` : ''}
+        ${!a.stoneOk && a.featureOk ? `<span class="lbl"></span><span class="val" style="color:var(--amber);font-size:11px">Can machine but must link around part</span>` : ''}
+      </div></div>
+    </div>`;
+  }
+
+
+  // Angle margins detail
   const marginToZLimit = cMinDeg !== null ? (currentC - cMinDeg) : null;
   const marginToCAxis = cAxisMax - currentC;
   const marginToReach = cMaxReachDeg !== null ? (cMaxReachDeg - currentC) : null;
+  dHtml += `<div class="detail-row" id="detail-angles" onclick="this.classList.toggle('expanded')">
+    <div class="detail-summary">
+      <span class="detail-arrow">&#9654;</span>
+      <span class="detail-label">Angle Margins</span>
+      <span class="detail-value">${rangeMin.toFixed(1)}&deg; &ndash; ${rangeMax.toFixed(1)}&deg;</span>
+    </div>
+    <div class="detail-body"><div class="result-grid">
+      ${marginToZLimit !== null ? (() => {
+        const c = marginToZLimit > 5 ? 'color-green' : (marginToZLimit >= 0 ? 'color-amber' : 'color-red');
+        const lbl = a.bindingSource === 'part clearance level' ? 'C for part clearance' : 'C for machining';
+        return `<span class="lbl">To ${lbl}:</span><span class="val ${c}">${marginToZLimit >= 0 ? '+' : ''}${marginToZLimit.toFixed(2)}&deg;</span>`;
+      })() : ''}
+      ${marginToReach !== null ? (() => {
+        const c = marginToReach > 5 ? 'color-green' : (marginToReach >= 0 ? 'color-amber' : 'color-red');
+        return `<span class="lbl">To C to reach mach.:</span><span class="val ${c}">${marginToReach >= 0 ? '+' : ''}${marginToReach.toFixed(2)}&deg;</span>`;
+      })() : ''}
+      <span class="lbl">To C axis max (90&deg;):</span><span class="val ${marginToCAxis > 5 ? 'color-green' : 'color-amber'}">${marginToCAxis.toFixed(2)}&deg;</span>
+      <span class="lbl">Usable range:</span><span class="val">${rangeMin.toFixed(1)}&deg; &ndash; ${rangeMax.toFixed(1)}&deg; (${(rangeMax - rangeMin).toFixed(1)}&deg;)</span>
+    </div></div>
+  </div>`;
 
-  // Helper for a single Z-check block
-  function checkBlock(label, zPivot, ok, cMin) {
-    const margin = zPivot - a.zLimit;
-    const statusClass = ok ? 'status-ok' : 'status-fail';
-    const statusText = ok ? 'OK' : 'OVER LIMIT';
-    const colorName = ok ? (margin < 20 ? 'amber' : 'green') : 'red';
-    let h = `<div style="margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">${label}</div>`;
-    h += `<div class="result-grid">
-      <span class="lbl">Z CoR:</span><span class="val">${zPivot.toFixed(2)} mm</span>
-      <span class="lbl">Margin:</span><span class="val color-${colorName}">${margin.toFixed(2)} mm</span>
-      <span class="lbl">Status:</span><span class="val"><span class="status-badge ${statusClass}">${statusText}</span></span>`;
-    if (cMin !== null) {
-      const delta = currentC - toDeg(cMin);
-      const dClass = delta > 5 ? 'color-green' : (delta >= 0 ? 'color-amber' : 'color-red');
-      h += `<span class="lbl">C_min:</span><span class="val">${toDeg(cMin).toFixed(2)}&deg; <span class="${dClass}">(${delta >= 0 ? '+' : ''}${delta.toFixed(2)}&deg;)</span></span>`;
-    }
-    h += `</div>`;
-    return h;
-  }
-
-  let html = '';
-
-  // Current angle summary
-  html += `<div class="result-grid">
-    <span class="lbl">Current C:</span><span class="val">${currentC.toFixed(2)}&deg;</span>
-    <span class="lbl">Upper Z limit:</span><span class="val">${a.zLimit.toFixed(2)} mm</span>`;
-  if (a.zLowerLimit !== null) {
-    html += `<span class="lbl">Lower Z limit:</span><span class="val">${a.zLowerLimit.toFixed(2)} mm</span>`;
-  }
-  html += `</div>`;
-
-  html += `<div class="divider"></div>`;
-
-  // Machining level clearance
-  html += checkBlock('Machining Level', a.zPivotFeature, a.featureOk, a.cMinFeature);
-
-  // Clearance level
-  if (a.zPivotStone !== null) {
-    html += `<div class="divider"></div>`;
-    html += checkBlock('Clearance Level', a.zPivotStone, a.stoneOk, a.cMinStone);
-    if (!a.stoneOk && a.featureOk) {
-      html += `<div class="inline-note" style="color:var(--amber)">Machining OK but cannot clear at linking height — route around outside of part</div>`;
-    }
-  }
-
-  // Reachability
-  if (a.zLowerLimit !== null) {
-    html += `<div class="divider"></div>`;
-    const reachMarginMm = a.zLowerLimit - a.zPivotFeature; // positive = reachable (CoR is above lower limit)
-    const reachOk = a.reachable;
-    const reachStatusClass = reachOk ? 'status-ok' : 'status-fail';
-    const reachStatusText = reachOk ? 'OK' : 'UNREACHABLE';
-    const reachColor = reachOk ? (reachMarginMm < 20 ? 'amber' : 'green') : 'red';
-    html += `<div style="margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">Reachability</div>`;
-    html += `<div class="result-grid">
-      <span class="lbl">Lower limit:</span><span class="val">${a.zLowerLimit.toFixed(2)} mm</span>
-      <span class="lbl">Margin:</span><span class="val color-${reachColor}">${reachMarginMm.toFixed(2)} mm</span>
-      <span class="lbl">Status:</span><span class="val"><span class="status-badge ${reachStatusClass}">${reachStatusText}</span></span>`;
-    if (cMaxReachDeg !== null) {
-      const delta = cMaxReachDeg - currentC;
-      const dClass = delta > 5 ? 'color-green' : (delta >= 0 ? 'color-amber' : 'color-red');
-      html += `<span class="lbl">C_max reach:</span><span class="val">${cMaxReachDeg.toFixed(2)}&deg; <span class="${dClass}">(${delta >= 0 ? '+' : ''}${delta.toFixed(2)}&deg;)</span></span>`;
-    }
-    html += `</div>`;
-    if (!reachOk) {
-      html += `<div class="inline-note" style="color:var(--red)">CoR cannot descend far enough — tool cannot reach machining level at this C angle</div>`;
-    }
-  }
-
-  html += `<div class="divider"></div>`;
-
-  // Margins from current angle
-  html += `<div style="margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">Angle Margins</div>`;
-  html += `<div class="result-grid">`;
-  if (marginToZLimit !== null) {
-    const zlClass = marginToZLimit > 5 ? 'color-green' : (marginToZLimit >= 0 ? 'color-amber' : 'color-red');
-    const zlStatus = marginToZLimit < 0 ? ' (OVER LIMIT)' : (marginToZLimit < 5 ? ' (tight)' : '');
-    html += `<span class="lbl">To C_min (${a.bindingSource}):</span><span class="val ${zlClass}">${marginToZLimit >= 0 ? '+' : ''}${marginToZLimit.toFixed(2)}&deg;${zlStatus}</span>`;
-  }
-  if (marginToReach !== null) {
-    const rClass = marginToReach > 5 ? 'color-green' : (marginToReach >= 0 ? 'color-amber' : 'color-red');
-    const rStatus = marginToReach < 0 ? ' (UNREACHABLE)' : (marginToReach < 5 ? ' (tight)' : '');
-    html += `<span class="lbl">To C_max (reach):</span><span class="val ${rClass}">${marginToReach >= 0 ? '+' : ''}${marginToReach.toFixed(2)}&deg;${rStatus}</span>`;
-  }
-  const cClass = marginToCAxis > 5 ? 'color-green' : (marginToCAxis >= 0 ? 'color-amber' : 'color-red');
-  const cStatus = marginToCAxis < 5 ? ' (tight)' : '';
-  html += `<span class="lbl">To C axis max (90&deg;):</span><span class="val ${cClass}">${marginToCAxis.toFixed(2)}&deg;${cStatus}</span>`;
-  html += `<span class="lbl">Usable range:</span><span class="val">${rangeMin.toFixed(1)}&deg; &ndash; ${rangeMax.toFixed(1)}&deg; (${(rangeMax - rangeMin).toFixed(1)}&deg;)</span>`;
-  html += `</div>`;
-
-  // Visual angle bar
-  html += buildAngleBar(currentC, rangeMin, rangeMax, cMinFeatureDeg, cMinStoneDeg, cMaxReachDeg);
-
-  el.innerHTML = html;
+  detailsEl.innerHTML = dHtml;
 }
 
+// Toggle a detail row by ID (called from card click)
+window.toggleDetailRow = function(id) {
+  const row = document.getElementById(id);
+  if (row) row.classList.toggle('expanded');
+};
+
 function buildAngleBar(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach) {
-  // Visual bar: 0° to 90° with markers
-  const barWidth = 100; // percent
+  const barWidth = 100;
   const pos = (v) => ((v / 90) * barWidth).toFixed(1);
 
   let html = `<div style="position:relative;height:40px;margin:8px 0 4px 0">`;
-  // Background bar (full 0-90 range)
   html += `<div style="position:absolute;top:14px;left:0;right:0;height:6px;background:var(--border);border-radius:3px"></div>`;
-  // Usable range highlight
-  html += `<div style="position:absolute;top:14px;left:${pos(cMin)}%;right:${(100 - parseFloat(pos(cMax))).toFixed(1)}%;height:6px;background:rgba(0,255,136,0.25);border-radius:3px"></div>`;
+  html += `<div style="position:absolute;top:14px;left:${pos(cMin)}%;right:${(100 - parseFloat(pos(cMax))).toFixed(1)}%;height:6px;background:var(--green-bg25);border-radius:3px"></div>`;
 
-  // C_min marker(s)
   if (cMinFeature !== null && cMinStone !== null && Math.abs(cMinFeature - cMinStone) > 0.5) {
-    // Show both markers if they're distinct
     const lesser = Math.min(cMinFeature, cMinStone);
     const lesserLabel = cMinFeature < cMinStone ? 'M' : 'C';
     html += `<div style="position:absolute;top:10px;left:${pos(lesser)}%;width:1px;height:14px;background:var(--amber);opacity:0.5"></div>`;
@@ -1172,29 +1764,305 @@ function buildAngleBar(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach) 
   }
   if (cMin > 0) {
     html += `<div style="position:absolute;top:10px;left:${pos(cMin)}%;width:2px;height:14px;background:var(--red)"></div>`;
-    html += `<div style="position:absolute;top:26px;left:${pos(cMin)}%;font-size:8px;color:var(--red);transform:translateX(-50%)">C_min</div>`;
+    html += `<div style="position:absolute;top:26px;left:${pos(cMin)}%;font-size:8px;color:var(--red);transform:translateX(-50%)">C clr</div>`;
   }
 
-  // C_max reach marker (orange) — ceiling from reachability
   if (cMaxReach !== null && cMaxReach < 90) {
     html += `<div style="position:absolute;top:10px;left:${pos(cMaxReach)}%;width:2px;height:14px;background:var(--amber)"></div>`;
-    html += `<div style="position:absolute;top:26px;left:${pos(cMaxReach)}%;font-size:8px;color:var(--amber);transform:translateX(-50%)">C_max</div>`;
+    html += `<div style="position:absolute;top:26px;left:${pos(cMaxReach)}%;font-size:8px;color:var(--amber);transform:translateX(-50%)">C reach</div>`;
   }
 
-  // Current angle marker
   const curColor = (currentC >= cMin && currentC <= cMax) ? 'var(--green)' : 'var(--red)';
   html += `<div style="position:absolute;top:6px;left:${pos(currentC)}%;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid ${curColor};transform:translateX(-5px)"></div>`;
   html += `<div style="position:absolute;top:0px;left:${pos(currentC)}%;font-size:8px;color:${curColor};transform:translateX(-50%);white-space:nowrap">${currentC.toFixed(1)}&deg;</div>`;
 
-  // 90° marker
   html += `<div style="position:absolute;top:10px;right:0;width:2px;height:14px;background:var(--amber)"></div>`;
   html += `<div style="position:absolute;top:26px;right:0;font-size:8px;color:var(--amber);transform:translateX(50%)">90&deg;</div>`;
-
-  // 0° label
   html += `<div style="position:absolute;top:26px;left:0;font-size:8px;color:var(--text-dim)">0&deg;</div>`;
 
   html += `</div>`;
   return html;
+}
+
+function drawArcGauge(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
+    currentA, featureOk, stoneOk, reachable, zMarginUpper, zMarginLower,
+    cWarnFeature, cWarnStone, cWarnReach) {
+  // Cache args so the toggle can re-draw without a new calculation
+  lastGaugeArgs = [currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
+    currentA, featureOk, stoneOk, reachable, zMarginUpper, zMarginLower,
+    cWarnFeature, cWarnStone, cWarnReach];
+
+  const canvas = document.getElementById('arc-gauge');
+  if (!canvas) return;
+  canvas.style.display = 'block';
+  const toggle = document.getElementById('arc-gauge-toggle');
+  if (toggle) toggle.style.display = 'block';
+
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Border color per mode: amber for Clearance, blue for Machining
+  const borderColor = arcGaugeMode === 0 ? SC('blue') : SC('amber');
+  const bw = 3;
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = bw;
+  ctx.strokeRect(bw / 2, bw / 2, W - bw, H - bw);
+
+  // Quarter-circle pie wedge, origin at top-left
+  const ox = 16;
+  const oy = 16;
+  const r = W - 28;
+
+  function cToAngle(c) { return (Math.PI / 2) * (1 - c / 90); }
+
+  function drawWedge(c1, c2, color) {
+    if (c1 >= c2) return;
+    const a1 = cToAngle(c2);
+    const a2 = cToAngle(c1);
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.arc(ox, oy, r, a1, a2, false);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  function drawLimitLine(cDeg, color) {
+    if (cDeg === null || cDeg <= 0 || cDeg >= 90) return;
+    const la = cToAngle(cDeg);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ox + Math.cos(la) * (r + 4), oy + Math.sin(la) * (r + 4));
+    ctx.stroke();
+  }
+
+  // --- Mode-specific zones and limit lines ---
+  const modeNames = ['Part Clearance', 'Machining'];
+
+  // Background wedge (full 0-90)
+  drawWedge(0, 90, 'rgba(255,255,255,0.06)');
+
+  let machLow = 0;   // lower bound of green zone
+  let machHigh = 90;  // upper bound of green zone
+
+  if (arcGaugeMode === 0) {
+    // Clearance: single constraint at cMinStone
+    machLow = (cMinStone !== null) ? cMinStone : 0;
+    machHigh = 90;
+  } else {
+    // Machining: valid range is cMinFeature to cMaxReach
+    machLow = (cMinFeature !== null) ? cMinFeature : 0;
+    machHigh = (cMaxReach !== null) ? Math.min(cMaxReach, 90) : 90;
+  }
+
+  // Red zone below lower bound (CoR above upper Z limit / need more tilt)
+  const zoneAlpha = colorblindMode ? 0.45 : 0.25;
+  const zoneAlphaLight = colorblindMode ? 0.35 : 0.18;
+  if (machLow > 0) drawWedge(0, machLow, SCrgba('red', zoneAlpha));
+  // Green zone (valid range)
+  drawWedge(machLow, machHigh, SCrgba('green', zoneAlphaLight));
+  // Amber zone above upper bound (CoR below lower Z limit / too much tilt)
+  if (machHigh < 90) drawWedge(machHigh, 90, SCrgba('amber', zoneAlphaLight));
+
+  // Outer arc edge
+  ctx.beginPath();
+  ctx.arc(ox, oy, r, cToAngle(90), cToAngle(0), false);
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Boundary lines at 0° and 90°
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(ox, oy);
+  ctx.lineTo(ox, oy + r);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(ox, oy);
+  ctx.lineTo(ox + r, oy);
+  ctx.stroke();
+
+  // Tick marks every 15°
+  for (let d = 0; d <= 90; d += 15) {
+    const ta = cToAngle(d);
+    const cos = Math.cos(ta), sin = Math.sin(ta);
+    const major = (d % 30 === 0);
+    const t0 = r - (major ? 10 : 5);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = major ? 1.5 : 1;
+    ctx.beginPath();
+    ctx.moveTo(ox + cos * t0, oy + sin * t0);
+    ctx.lineTo(ox + cos * r, oy + sin * r);
+    ctx.stroke();
+  }
+
+  // Degree labels
+  ctx.font = '10px monospace';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  [0, 30, 60, 90].forEach(d => {
+    const da = cToAngle(d);
+    const lr = r + 13;
+    const x = ox + Math.cos(da) * lr;
+    const y = oy + Math.sin(da) * lr;
+    if (d === 0) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; }
+    else if (d === 90) { ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; }
+    else { ctx.textAlign = 'left'; ctx.textBaseline = 'top'; }
+    ctx.fillText(d + '°', x, y);
+  });
+
+  // Limit lines
+  drawLimitLine(machLow, SC('red'));
+  if (machHigh < 90) drawLimitLine(machHigh, SC('amber'));
+
+  // Needle for current C angle (skip in manual mode when currentC is null)
+  if (currentC !== null) {
+    const a = cToAngle(currentC);
+    const inRange = currentC >= machLow && currentC <= machHigh;
+    // Only warn about approaching machHigh if it's a real constraint (cMaxReach), not the 90° axis limit
+    const hasUpperLimit = arcGaugeMode === 1 && cMaxReach !== null && cMaxReach < 90;
+    const marginDeg = Math.min(currentC - machLow, hasUpperLimit ? (machHigh - currentC) : Infinity);
+    const statusColor = !inRange ? SC('red') : (marginDeg < 5 ? SC('amber') : SC('green'));
+
+    // Shaft line
+    const tipLen = 10;
+    ctx.strokeStyle = statusColor;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ox + Math.cos(a) * (r - tipLen - 2), oy + Math.sin(a) * (r - tipLen - 2));
+    ctx.stroke();
+
+    // Pointed tip (triangle)
+    const tipBase = r - tipLen - 2;
+    const tipEnd = r + 2;
+    const tipHalf = 4;
+    const perpA = a + Math.PI / 2;
+    const bx = ox + Math.cos(a) * tipBase;
+    const by = oy + Math.sin(a) * tipBase;
+    ctx.beginPath();
+    ctx.moveTo(ox + Math.cos(a) * tipEnd, oy + Math.sin(a) * tipEnd);
+    ctx.lineTo(bx + Math.cos(perpA) * tipHalf, by + Math.sin(perpA) * tipHalf);
+    ctx.lineTo(bx - Math.cos(perpA) * tipHalf, by - Math.sin(perpA) * tipHalf);
+    ctx.closePath();
+    ctx.fillStyle = statusColor;
+    ctx.fill();
+
+    // Needle dot at origin
+    ctx.beginPath();
+    ctx.arc(ox, oy, 3, 0, Math.PI * 2);
+    ctx.fillStyle = statusColor;
+    ctx.fill();
+
+    // Current angle label inside the arc, offset perpendicular to the needle
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const lr2 = r * 0.7;
+    const perpDir = currentC < 45 ? (a - Math.PI / 2) : (a + Math.PI / 2);
+    const lx = ox + Math.cos(a) * lr2 + Math.cos(perpDir) * 16;
+    const ly = oy + Math.sin(a) * lr2 + Math.sin(perpDir) * 16;
+    const label = currentC.toFixed(1) + '\u00B0';
+    const tw = ctx.measureText(label).width;
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(lx - tw / 2 - 3, ly - 7, tw + 6, 14);
+    ctx.fillStyle = statusColor;
+    ctx.fillText(label, lx, ly);
+  }
+
+  // Update toggle label
+  if (toggle) toggle.textContent = modeNames[arcGaugeMode] + ' \u25B8';
+
+  // --- Info panel next to gauge ---
+  const infoEl = document.getElementById('arc-gauge-info');
+  if (infoEl) {
+    infoEl.style.display = 'flex';
+
+    if (currentC === null) {
+      // Manual mode — show constraint angles with warning boundaries
+      let anglesHtml = '';
+      if (cMinFeature !== null) {
+        anglesHtml += `<span style="color:var(--amber)">Machining: ${cMinFeature.toFixed(1)}\u00B0</span>`;
+        if (cWarnFeature !== null) anglesHtml += ` <span style="color:var(--orange);opacity:0.6">(safe ${cWarnFeature.toFixed(1)}\u00B0)</span>`;
+        anglesHtml += '<br>';
+      }
+      if (cMinStone !== null) {
+        anglesHtml += `<span style="color:var(--blue)">Clearance: ${cMinStone.toFixed(1)}\u00B0</span>`;
+        if (cWarnStone !== null) anglesHtml += ` <span style="color:var(--orange);opacity:0.6">(safe ${cWarnStone.toFixed(1)}\u00B0)</span>`;
+        anglesHtml += '<br>';
+      }
+      if (cMaxReach !== null) {
+        anglesHtml += `<span style="color:var(--green)">Reachable: ${cMaxReach.toFixed(1)}\u00B0</span>`;
+        if (cWarnReach !== null) anglesHtml += ` <span style="color:var(--orange);opacity:0.6">(safe ${cWarnReach.toFixed(1)}\u00B0)</span>`;
+      }
+      if (!anglesHtml) anglesHtml = '<span style="color:var(--green)">No constraints</span>';
+      infoEl.innerHTML = `<div style="background:rgba(10,14,20,0.9);padding:8px 12px;border-radius:4px;line-height:1.6">${anglesHtml}</div>`;
+    } else {
+      // File mode — full status display
+      let statusHtml = '';
+      if (arcGaugeMode === 0) {
+        if (stoneOk === null) {
+          statusHtml = '<span style="color:var(--text-dim)">No part clearance data</span>';
+        } else if (stoneOk) {
+          statusHtml = '<span style="color:var(--green);font-weight:700;font-size:14px">OK</span>';
+        } else {
+          statusHtml = `<span style="color:var(--red);font-weight:700">UPPER Z LIMIT EXCEEDED</span><br>`
+            + (cMinStone !== null ? `<span style="color:var(--red)">+${(cMinStone - currentC).toFixed(1)}\u00B0 more needed</span>` : '');
+        }
+      } else {
+        const machOk2 = featureOk && (reachable === null || reachable);
+        if (machOk2) {
+          statusHtml = '<span style="color:var(--green);font-weight:700;font-size:14px">OK</span>';
+        } else if (!featureOk) {
+          statusHtml = `<span style="color:var(--red);font-weight:700">EXCEEDED</span><br>`
+            + (cMinFeature !== null ? `<span style="color:var(--red)">+${(cMinFeature - currentC).toFixed(1)}\u00B0 more needed</span>` : '');
+        } else {
+          statusHtml = `<span style="color:var(--red);font-weight:700">UNREACHABLE</span><br>`
+            + (cMaxReach !== null ? `<span style="color:var(--red)">\u2212${(currentC - cMaxReach).toFixed(1)}\u00B0 less needed</span>` : '');
+        }
+      }
+
+      let anglesHtml = `<span style="color:var(--text);font-weight:700">C: ${currentC.toFixed(2)}\u00B0</span><br>`
+        + `<span>A: ${(currentA !== undefined ? currentA.toFixed(2) : '\u2014')}\u00B0</span>`;
+      if (cMinFeature !== null) {
+        anglesHtml += `<br><span style="color:var(--amber)">C for machining: ${cMinFeature.toFixed(1)}\u00B0</span>`;
+      }
+      if (cMinStone !== null) {
+        anglesHtml += `<br><span style="color:var(--blue)">C for part clearance: ${cMinStone.toFixed(1)}\u00B0</span>`;
+      }
+      if (zMarginUpper !== undefined && zMarginUpper !== null) {
+        const uColor = zMarginUpper >= 0 ? (zMarginUpper < 5 ? 'var(--amber)' : 'var(--green)') : 'var(--red)';
+        anglesHtml += `<br><span>Upper Z margin: <span style="color:${uColor}">${zMarginUpper >= 0 ? '+' : ''}${zMarginUpper.toFixed(1)} mm</span></span>`;
+      }
+      if (zMarginLower !== undefined && zMarginLower !== null) {
+        const lColor = zMarginLower >= 0 ? (zMarginLower < 5 ? 'var(--amber)' : 'var(--green)') : 'var(--red)';
+        anglesHtml += `<br><span>Lower Z margin: <span style="color:${lColor}">${zMarginLower >= 0 ? '+' : ''}${zMarginLower.toFixed(1)} mm</span></span>`;
+      }
+
+      infoEl.innerHTML = `<div style="background:rgba(10,14,20,0.9);padding:8px 12px;border-radius:4px;line-height:1.6">${statusHtml}</div>`
+        + `<div style="background:rgba(10,14,20,0.9);padding:8px 12px;border-radius:4px;line-height:1.6">${anglesHtml}</div>`;
+    }
+  }
+}
+
+function cycleArcGaugeMode() {
+  arcGaugeMode = (arcGaugeMode + 1) % 2;
+  if (lastGaugeArgs) drawArcGauge(...lastGaugeArgs);
+}
+
+function hideArcGauge() {
+  const canvas = document.getElementById('arc-gauge');
+  if (canvas) canvas.style.display = 'none';
+  const toggle = document.getElementById('arc-gauge-toggle');
+  if (toggle) toggle.style.display = 'none';
+  const info = document.getElementById('arc-gauge-info');
+  if (info) info.style.display = 'none';
+  const badges = document.getElementById('status-badges');
+  if (badges) badges.style.display = 'none';
 }
 
 function showAdjusted(adj, originalC) {
@@ -1212,7 +2080,7 @@ function showAdjusted(adj, originalC) {
 
   const deltaC = toDeg(adj.C) - toDeg(originalC);
   const featureStatusClass = adj.featureOk ? 'status-ok' : 'status-fail';
-  const featureStatusText = adj.featureOk ? 'OK' : 'OVER LIMIT';
+  const featureStatusText = adj.featureOk ? 'OK' : 'EXCEEDED';
 
   let html = `
     <div class="result-grid">
@@ -1228,10 +2096,10 @@ function showAdjusted(adj, originalC) {
 
   if (adj.zPivotStone !== null) {
     const stoneStatusClass = adj.stoneOk ? 'status-ok' : 'status-fail';
-    const stoneStatusText = adj.stoneOk ? 'OK' : 'OVER LIMIT';
+    const stoneStatusText = adj.stoneOk ? 'OK' : 'UPPER Z LIMIT EXCEEDED';
     html += `<div class="result-grid" style="margin-top:4px">
-      <span class="lbl">Clearance CoR:</span><span class="val">${adj.zPivotStone.toFixed(2)} mm</span>
-      <span class="lbl">Clearance level:</span><span class="val"><span class="status-badge ${stoneStatusClass}">${stoneStatusText}</span></span>
+      <span class="lbl">Part Clearance CoR:</span><span class="val">${adj.zPivotStone.toFixed(2)} mm</span>
+      <span class="lbl">Part Clearance level:</span><span class="val"><span class="status-badge ${stoneStatusClass}">${stoneStatusText}</span></span>
     </div>`;
 
     if (!adj.stoneOk && adj.featureOk) {
@@ -1270,6 +2138,7 @@ window.clearPlaneData = function() {
 // ═══════════════════════════════════════════════════
 let fileHandle = null;   // FileSystemFileHandle for current file
 let lastDirHandle = null; // remember last directory for file picker
+let recentFiles = [];    // array of {handle, name} — most recent first, max 3
 
 function showFileName(name) {
   const el = document.getElementById('file-name');
@@ -1300,20 +2169,75 @@ function openHandleDB() {
 
 async function saveFileHandle(handle) {
   try {
+    // Add to recent files, dedupe by name, keep max 3
+    recentFiles = recentFiles.filter(f => f.name !== handle.name);
+    recentFiles.unshift({ handle, name: handle.name });
+    if (recentFiles.length > 3) recentFiles.length = 3;
+    updateRecentFilesDropdown();
     const db = await openHandleDB();
     const tx = db.transaction('handles', 'readwrite');
-    tx.objectStore('handles').put(handle, 'lastFile');
+    const store = tx.objectStore('handles');
+    store.put(handle, 'lastFile');
+    // Store recent handles individually: recent_0, recent_1, recent_2
+    for (let i = 0; i < 3; i++) {
+      if (i < recentFiles.length) {
+        store.put(recentFiles[i].handle, 'recent_' + i);
+      } else {
+        store.delete('recent_' + i);
+      }
+    }
+    store.put(recentFiles.length, 'recentCount');
     await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
   } catch (e) {}
 }
 
-async function loadFileHandle() {
+async function loadRecentFiles() {
   try {
     const db = await openHandleDB();
     const tx = db.transaction('handles', 'readonly');
-    const req = tx.objectStore('handles').get('lastFile');
-    return await new Promise((res, rej) => { req.onsuccess = () => res(req.result); req.onerror = rej; });
+    const store = tx.objectStore('handles');
+    const countReq = store.get('recentCount');
+    const count = await new Promise((res, rej) => { countReq.onsuccess = () => res(countReq.result || 0); countReq.onerror = rej; });
+    const files = [];
+    for (let i = 0; i < Math.min(count, 3); i++) {
+      const hReq = store.get('recent_' + i);
+      const h = await new Promise((res, rej) => { hReq.onsuccess = () => res(hReq.result); hReq.onerror = rej; });
+      if (h) files.push({ handle: h, name: h.name });
+    }
+    recentFiles = files;
+    updateRecentFilesDropdown();
+    return files.length > 0 ? files[0].handle : null;
   } catch (e) { return null; }
+}
+
+function updateRecentFilesDropdown() {
+  const sel = document.getElementById('sel-recent-files');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Recent files...</option>';
+  recentFiles.forEach((f, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = f.name;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadRecentFileByIndex(idx) {
+  const entry = recentFiles[idx];
+  if (!entry) return;
+  try {
+    const text = await readFileHandle(entry.handle);
+    if (text !== null) {
+      fileHandle = entry.handle;
+      hasFramedOnce = false;
+      document.getElementById('in-plane').value = text;
+      showFileName(entry.name);
+      saveSettings();
+      calculate();
+    }
+  } catch (e) {
+    console.error('Recent file load error:', e);
+  }
 }
 
 async function clearFileHandle() {
@@ -1348,7 +2272,10 @@ window.pickPlaneFile = async function() {
       calculate();
     }
   } catch (e) {
-    if (e.name !== 'AbortError') console.error('File pick error:', e);
+    if (e.name === 'AbortError') return; // user cancelled
+    // Fallback to classic file input when File System Access API fails
+    console.warn('showOpenFilePicker failed, using fallback:', e);
+    document.getElementById('file-input-fallback').click();
   }
 };
 
@@ -1392,6 +2319,8 @@ function calculateBatch() {
   const zTravelVal = document.getElementById('in-ztravel').value;
   const zTravel = zTravelVal ? parseFloat(zTravelVal) : null;
   const zLowerLimit = (zTravel !== null) ? zLimit + zTravel : null;
+  const warnToleranceVal = document.getElementById('in-warntolerance').value;
+  const wt = warnToleranceVal ? parseFloat(warnToleranceVal) : 20;
 
   if (isNaN(toolLen) || toolLen <= 0 || isNaN(zLimit) || isNaN(globalZFeature)) return;
 
@@ -1452,11 +2381,9 @@ function calculateBatch() {
       status = 'fail';
       statusNote = 'CoR cannot reach';
     } else if (stoneOk === false) {
-      status = 'warn';
-      statusNote = 'clearance level';
-    } else if (featureMargin < 20 || (stoneMargin !== null && stoneMargin < 20) ||
-               (angleMargin !== null && angleMargin >= 0 && angleMargin < 5) ||
-               (reachMargin !== null && reachMargin >= 0 && reachMargin < 5)) {
+      status = 'fail';
+      statusNote = 'part clearance level';
+    } else if (featureMargin < wt || (stoneMargin !== null && stoneMargin < wt)) {
       status = 'warn';
       statusNote = 'tight margins';
     } else {
@@ -1481,15 +2408,18 @@ function calculateBatch() {
 }
 
 function hideDetailSections() {
-  ['sec-parsed', 'sec-analysis', 'sec-adjusted'].forEach(id => {
+  ['sec-parsed', 'sec-results', 'sec-adjusted'].forEach(id => {
     document.getElementById(id).classList.add('hidden');
   });
+  hideArcGauge();
 }
 
 function renderBatchTable() {
   const sec = document.getElementById('sec-batch');
   sec.classList.remove('hidden');
   const tbody = document.getElementById('batch-tbody');
+  const wtVal = document.getElementById('in-warntolerance').value;
+  const wt = wtVal ? parseFloat(wtVal) : 20;
 
   // Counts
   const failCount = batchResults.filter(r => r.status === 'fail').length;
@@ -1532,15 +2462,15 @@ function renderBatchTable() {
 
     const aDeg = aDisplayDeg(r.A).toFixed(1);
     const cDeg = toDeg(r.C).toFixed(1);
-    const cMin = r.cMinBinding !== null ? toDeg(r.cMinBinding).toFixed(1) + '°' : '—';
 
-    // Machining level status: margin value colored by threshold
-    const fMargin = r.featureMargin.toFixed(1);
-    const fColor = r.featureMargin < 0 ? 'var(--red)' : (r.featureMargin < 20 ? 'var(--amber)' : 'var(--green)');
+    // Machining status (matches single-plane card logic)
+    const machOk = r.featureOk && (r.reachable === null || r.reachable);
+    const fText = !r.featureOk ? 'EXCEEDED' : (r.reachable === false ? 'UNREACHABLE' : (r.featureMargin < wt ? 'CLOSE' : 'OK'));
+    const fColor = !machOk ? 'var(--red)' : (r.featureMargin < wt ? 'var(--orange)' : 'var(--green)');
 
-    // Clearance level status: margin value or "—"
-    const sMargin = r.stoneMargin !== null ? r.stoneMargin.toFixed(1) : '—';
-    const sColor = r.stoneMargin === null ? '' : (r.stoneMargin < 0 ? 'var(--red)' : (r.stoneMargin < 20 ? 'var(--amber)' : 'var(--green)'));
+    // Clearance status (matches single-plane card logic)
+    const sText = r.stoneMargin === null ? '—' : (!r.stoneOk ? 'EXCEEDED' : (r.stoneMargin < wt ? 'CLOSE' : 'OK'));
+    const sColor = r.stoneMargin === null ? '' : (!r.stoneOk ? 'var(--red)' : (r.stoneMargin < wt ? 'var(--orange)' : 'var(--green)'));
 
     const overrideIcon = r.hasOverride ? ' *' : '';
 
@@ -1550,11 +2480,10 @@ function renderBatchTable() {
     tr.onclick = () => viewBatchPlane(r.idx);
     tr.innerHTML = `
       <td title="${p.name}">${p.name.length > 20 ? p.name.slice(0, 18) + '…' : p.name}${overrideIcon}</td>
-      <td>${aDeg}°</td>
       <td>${cDeg}°</td>
-      <td style="color:${fColor}">${fMargin}</td>
-      <td style="color:${sColor}">${sMargin}</td>
-      <td>${cMin}</td>
+      <td>${aDeg}°</td>
+      <td style="color:${fColor}">${fText}</td>
+      <td style="color:${sColor}">${sText}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -1644,10 +2573,6 @@ function collapseSection(id) {
   }
 }
 
-function collapseInputSections() {
-  collapseSection('sec-inputs');
-}
-
 // ═══════════════════════════════════════════════════
 // SETTINGS PERSISTENCE
 // ═══════════════════════════════════════════════════
@@ -1658,9 +2583,15 @@ function saveSettings() {
     toolLen: document.getElementById('in-toollen').value,
     toolRadius: document.getElementById('in-toolradius').value,
     machMode: document.getElementById('in-machmode').value,
+    warnTolerance: document.getElementById('in-warntolerance').value,
     zFeature: document.getElementById('in-zfeature').value,
     partHeight: document.getElementById('in-partheight').value,
     clearanceHeight: document.getElementById('in-clearanceheight').value,
+    edgeMode: document.getElementById('chk-edge-mode').checked,
+    showGhostTool,
+    showReachTool,
+    colorblindMode,
+    manualMode: document.getElementById('chk-manual-mode').checked,
   };
   localStorage.setItem('planeCalcSettings', JSON.stringify(data));
 }
@@ -1674,24 +2605,98 @@ function loadSettings() {
       if (data.toolLen) document.getElementById('in-toollen').value = data.toolLen;
       if (data.toolRadius) document.getElementById('in-toolradius').value = data.toolRadius;
       if (data.machMode) document.getElementById('in-machmode').value = data.machMode;
+      if (data.warnTolerance) document.getElementById('in-warntolerance').value = data.warnTolerance;
       if (data.zFeature) document.getElementById('in-zfeature').value = data.zFeature;
       if (data.partHeight) document.getElementById('in-partheight').value = data.partHeight;
       if (data.clearanceHeight) document.getElementById('in-clearanceheight').value = data.clearanceHeight;
+      if (data.edgeMode) document.getElementById('chk-edge-mode').checked = data.edgeMode;
+      if (data.showGhostTool !== undefined) { showGhostTool = data.showGhostTool; document.getElementById('chk-ghost-tool').checked = showGhostTool; }
+      if (data.showReachTool !== undefined) { showReachTool = data.showReachTool; document.getElementById('chk-reach-tool').checked = showReachTool; }
+      if (data.colorblindMode) {
+        colorblindMode = true;
+        document.getElementById('chk-colorblind').checked = true;
+        applyColorMode();
+      }
+      if (data.manualMode) {
+        document.getElementById('chk-manual-mode').checked = true;
+        toggleManualMode(true);
+      }
     }
   } catch (e) {}
 }
 
-// Auto-save and auto-calculate on any input change
-function onInputChange() { saveSettings(); calculate(); }
+// Auto-save on any input change (calculate only on Enter or CALCULATE button)
+function onInputChange() { saveSettings(); }
 document.getElementById('in-zlimit').addEventListener('change', onInputChange);
 document.getElementById('in-ztravel').addEventListener('change', onInputChange);
 document.getElementById('in-toollen').addEventListener('change', onInputChange);
 document.getElementById('in-toolradius').addEventListener('change', onInputChange);
-document.getElementById('in-machmode').addEventListener('change', onInputChange);
+document.getElementById('in-machmode').addEventListener('change', function() {
+  saveSettings();
+  document.getElementById('chk-manual-mode').checked ? calculateManual() : calculate();
+});
+document.getElementById('in-warntolerance').addEventListener('change', onInputChange);
 document.getElementById('in-zfeature').addEventListener('change', onInputChange);
 document.getElementById('in-partheight').addEventListener('change', onInputChange);
 document.getElementById('in-clearanceheight').addEventListener('change', onInputChange);
 document.getElementById('in-plane').addEventListener('input', onInputChange);
+// Enter key triggers recalculation on numeric inputs
+['in-zlimit','in-ztravel','in-toollen','in-toolradius',
+ 'in-zfeature','in-partheight','in-clearanceheight','in-warntolerance']
+  .forEach(id => {
+    document.getElementById(id).addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); this.blur(); saveSettings(); document.getElementById('chk-manual-mode').checked ? calculateManual() : calculate(); }
+    });
+  });
+document.getElementById('chk-manual-mode').addEventListener('change', function() {
+  toggleManualMode(this.checked);
+});
+document.getElementById('chk-edge-mode').addEventListener('change', function() {
+  saveSettings();
+  if (currentState) updateScene(true);
+});
+document.getElementById('chk-ghost-tool').addEventListener('change', function() {
+  showGhostTool = this.checked;
+  saveSettings();
+  if (currentState) updateScene(true);
+});
+document.getElementById('chk-reach-tool').addEventListener('change', function() {
+  showReachTool = this.checked;
+  saveSettings();
+  if (currentState) updateScene(true);
+});
+document.getElementById('file-input-fallback').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function() {
+    document.getElementById('in-plane').value = reader.result;
+    showFileName(file.name);
+    hasFramedOnce = false;
+    fileHandle = null;
+    saveSettings();
+    calculate();
+  };
+  reader.readAsText(file);
+  e.target.value = ''; // reset so same file can be re-selected
+});
+document.getElementById('sel-recent-files').addEventListener('change', function() {
+  const idx = parseInt(this.value);
+  this.value = ''; // reset to placeholder
+  if (!isNaN(idx)) loadRecentFileByIndex(idx);
+});
+document.getElementById('chk-colorblind').addEventListener('change', function() {
+  colorblindMode = this.checked;
+  applyColorMode();
+  saveSettings();
+  const isManual = document.getElementById('chk-manual-mode').checked;
+  if (isManual) {
+    if (manualState) calculateManual();
+  } else {
+    if (currentState) { calculate(); }
+  }
+  if (lastGaugeArgs) drawArcGauge(...lastGaugeArgs);
+});
 
 // ═══════════════════════════════════════════════════
 // THREE.JS SCENE SETUP
@@ -1781,7 +2786,7 @@ function disposeObject(obj) {
 
 function buildDefaultScene() {
   buildTable(new THREE.Vector3(0, 0, 0));
-  addLabel(new THREE.Vector3(0, -1300, 2), 'Table / Z=0', '');
+  addLabel(new THREE.Vector3(0, -1550, 2), 'Table / Z=0', '');
 }
 
 // ── Coordinate helpers ──
@@ -1852,7 +2857,7 @@ function buildTable(center) {
     new THREE.Vector3(TABLE_X / 2 + center.x, -TABLE_Y / 2 + center.y, center.z + 0.5),
   ];
   const frontGeo = new THREE.BufferGeometry().setFromPoints(frontPts);
-  const frontMat = new THREE.LineBasicMaterial({ color: 0x58a6ff, linewidth: 2 });
+  const frontMat = new THREE.LineBasicMaterial({ color: SChex('blue'), linewidth: 2 });
   group.add(new THREE.Line(frontGeo, frontMat));
 
   // Side labels
@@ -1892,13 +2897,13 @@ function buildStone(partHeight, zStone, featureZ, sceneScale) {
     }
   }
 
-  // Clearance plane: translucent amber at clearance level height (same XY as machining plane)
+  // Clearance plane: translucent blue at clearance level height (same XY as machining plane)
   if (zStone !== null && !isNaN(zStone)) {
     const clearTopZ = machineZToDisplay(zStone, featureZ);
     const cw = sceneScale * 0.8;
     const cd = sceneScale * 0.6;
     const planeGeo = new THREE.PlaneGeometry(cw, cd);
-    const planeMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+    const planeMat = new THREE.MeshStandardMaterial({ color: SChex('blue'), transparent: true, opacity: 0.2, side: THREE.DoubleSide });
     const planeMesh = new THREE.Mesh(planeGeo, planeMat);
     planeMesh.position.set(0, 0, clearTopZ);
     group.add(planeMesh);
@@ -1909,11 +2914,11 @@ function buildStone(partHeight, zStone, featureZ, sceneScale) {
       new THREE.Vector3(cw/2, cd/2, clearTopZ), new THREE.Vector3(-cw/2, cd/2, clearTopZ),
       new THREE.Vector3(-cw/2, -cd/2, clearTopZ),
     ]);
-    const borderMat = new THREE.LineBasicMaterial({ color: 0xffaa00, opacity: 0.6, transparent: true });
+    const borderMat = new THREE.LineBasicMaterial({ color: SChex('blue'), opacity: 0.6, transparent: true });
     const border = new THREE.Line(borderGeo, borderMat);
     group.add(border);
 
-    addLabel(new THREE.Vector3(cw / 2 + 10, 0, clearTopZ), `Clearance Level (Z=${Math.abs(zStone)})`, 'label-amber');
+    addLabel(new THREE.Vector3(cw / 2 + 10, 0, clearTopZ), `Part Clearance Level (Z=${Math.abs(zStone)})`, 'label-blue');
   }
 
   scene.add(group);
@@ -1927,9 +2932,10 @@ function buildMachiningPlane(sceneScale) {
   const displayZ = 0; // machining level is at the feature origin
 
   const planeGeo = new THREE.PlaneGeometry(w, d);
-  const planeMat = new THREE.MeshStandardMaterial({ color: 0x58a6ff, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+  const planeMat = new THREE.MeshStandardMaterial({ color: SChex('amber'), transparent: true, opacity: 0.15, side: THREE.DoubleSide, depthTest: false, depthWrite: false });
   const planeMesh = new THREE.Mesh(planeGeo, planeMat);
   planeMesh.position.set(0, 0, displayZ);
+  planeMesh.renderOrder = 1;
   group.add(planeMesh);
 
   const borderGeo = new THREE.BufferGeometry().setFromPoints([
@@ -1937,8 +2943,9 @@ function buildMachiningPlane(sceneScale) {
     new THREE.Vector3(w/2, d/2, displayZ), new THREE.Vector3(-w/2, d/2, displayZ),
     new THREE.Vector3(-w/2, -d/2, displayZ),
   ]);
-  const borderMat = new THREE.LineBasicMaterial({ color: 0x58a6ff, opacity: 0.5, transparent: true });
+  const borderMat = new THREE.LineBasicMaterial({ color: SChex('amber'), opacity: 0.5, transparent: true, depthTest: false, depthWrite: false });
   const border = new THREE.Line(borderGeo, borderMat);
+  border.renderOrder = 1;
   group.add(border);
 
   scene.add(group);
@@ -1957,9 +2964,10 @@ function buildZLimitPlane(zLimit, featureZ) {
     new THREE.Vector3(hx, hy, displayZ), new THREE.Vector3(-hx, hy, displayZ),
     new THREE.Vector3(-hx, -hy, displayZ),
   ]);
-  const borderMat = new THREE.LineDashedMaterial({ color: 0xff4444, dashSize: 30, gapSize: 15, opacity: 0.5, transparent: true });
+  const borderMat = new THREE.LineDashedMaterial({ color: SChex('red'), dashSize: 30, gapSize: 15, opacity: 0.5, transparent: true, depthTest: false, depthWrite: false });
   const border = new THREE.Line(borderGeo, borderMat);
   border.computeLineDistances();
+  border.renderOrder = 1;
   group.add(border);
 
   scene.add(group);
@@ -1974,28 +2982,36 @@ function buildZLowerLimitPlane(zLowerLimit, featureZ, sceneScale) {
   const w = sceneScale * 0.8;
   const d = sceneScale * 0.6;
 
-  // Dashed frame (no fill), same size as machining/clearance planes
+  const planeGeo = new THREE.PlaneGeometry(w, d);
+  const planeMat = new THREE.MeshStandardMaterial({ color: 0x555555, transparent: true, opacity: 0.15, side: THREE.DoubleSide, depthTest: false, depthWrite: false });
+  const planeMesh = new THREE.Mesh(planeGeo, planeMat);
+  planeMesh.position.set(0, 0, displayZ);
+  planeMesh.renderOrder = 1;
+  group.add(planeMesh);
+
   const borderGeo = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(-w/2, -d/2, displayZ), new THREE.Vector3(w/2, -d/2, displayZ),
     new THREE.Vector3(w/2, d/2, displayZ), new THREE.Vector3(-w/2, d/2, displayZ),
     new THREE.Vector3(-w/2, -d/2, displayZ),
   ]);
-  const borderMat = new THREE.LineDashedMaterial({ color: 0x555555, dashSize: 20, gapSize: 12, opacity: 0.6, transparent: true });
+  const borderMat = new THREE.LineBasicMaterial({ color: 0x555555, opacity: 0.5, transparent: true, depthTest: false, depthWrite: false });
   const border = new THREE.Line(borderGeo, borderMat);
-  border.computeLineDistances();
+  border.renderOrder = 1;
   group.add(border);
 
   scene.add(group);
   sceneObjects.zLowerLimitPlane = group;
 
-  addLabel(new THREE.Vector3(w / 2 + 10, 0, displayZ), `Z Lower Limit (${Math.abs(zLowerLimit)} mm)`, '');
+  addLabel(new THREE.Vector3(w / 2 + 10, 0, displayZ), `Z Lower Limit (${zLowerLimit} mm)`, 'label-gray');
 }
 
-function buildToolVector(featureOrigin, normal, toolLen, color, groupKey, sceneScale, toolRadius, featureZOffset, diskColor) {
+function buildToolVector(featureOrigin, normal, toolLen, color, groupKey, sceneScale, toolRadius, featureZOffset, diskColor, xyOffset) {
   const group = new THREE.Group();
   const dc = diskColor || color;
+  const ox = xyOffset ? xyOffset.x : 0;
+  const oy = xyOffset ? xyOffset.y : 0;
 
-  const featurePos = new THREE.Vector3(0, 0, featureZOffset || 0);
+  const featurePos = new THREE.Vector3(ox, oy, featureZOffset || 0);
   const dispDir = new THREE.Vector3(-normal[0], -normal[1], -normal[2]).normalize();
   const pivotPos = featurePos.clone().add(dispDir.clone().multiplyScalar(-toolLen));
   const upDir = pivotPos.clone().sub(featurePos).normalize();
@@ -2049,9 +3065,11 @@ function buildPivotPoint(featureZ, normal, toolLen, zLimit, C, groupKey, labelTe
   const featureZOffset = (opts && opts.featureZOffset) || 0;
   const colorOverride = opts && opts.colorOverride;
   const effectiveFeatureZ = (opts && opts.effectiveFeatureZ != null) ? opts.effectiveFeatureZ : featureZ;
+  const ox = (opts && opts.xyOffset) ? opts.xyOffset.x : 0;
+  const oy = (opts && opts.xyOffset) ? opts.xyOffset.y : 0;
 
   const dispDir = new THREE.Vector3(-normal[0], -normal[1], -normal[2]).normalize();
-  const pivotPos = new THREE.Vector3(0, 0, featureZOffset).add(dispDir.clone().multiplyScalar(-toolLen));
+  const pivotPos = new THREE.Vector3(ox, oy, featureZOffset).add(dispDir.clone().multiplyScalar(-toolLen));
 
   const zPivotMachine = effectiveFeatureZ - toolLen * Math.cos(C);
   const zLowerLimit = opts && opts.zLowerLimit;
@@ -2059,7 +3077,7 @@ function buildPivotPoint(featureZ, normal, toolLen, zLimit, C, groupKey, labelTe
   const withinLower = (zLowerLimit == null) || (zPivotMachine <= zLowerLimit);  // within reach (not below lower limit)
   const isOk = colorOverride ? false : (withinUpper && withinLower);
 
-  const corColor = colorOverride || (isOk ? 0x00ff88 : 0xff4444);
+  const corColor = colorOverride || (isOk ? SChex('green') : SChex('red'));
   const corRadius = sceneScale * 0.03;
   const corHeight = sceneScale * 0.06;
 
@@ -2144,16 +3162,18 @@ function buildMachineZAxis(pivotPos, sceneScale) {
   sceneObjects.machineZAxis = group;
 }
 
-function buildGhostTool(normal, toolLen, zOffset, sceneScale, stoneOk, toolRadius) {
+function buildGhostTool(normal, toolLen, zOffset, sceneScale, stoneOk, toolRadius, xyOffset) {
   const group = new THREE.Group();
+  const ox = xyOffset ? xyOffset.x : 0;
+  const oy = xyOffset ? xyOffset.y : 0;
 
-  const ghostFeature = new THREE.Vector3(0, 0, zOffset);
+  const ghostFeature = new THREE.Vector3(ox, oy, zOffset);
   const dispDir = new THREE.Vector3(-normal[0], -normal[1], -normal[2]).normalize();
   const ghostPivot = ghostFeature.clone().add(dispDir.clone().multiplyScalar(-toolLen));
   const upDir = ghostPivot.clone().sub(ghostFeature).normalize();
 
   // Color: green if stone clears (or no stone), red if it doesn't
-  const ghostColor = (stoneOk === false) ? 0xff4444 : 0x44cc44;
+  const ghostColor = (stoneOk === false) ? SChex('red') : SChex('green');
 
   // Tool shaft
   const shaftRadius = sceneScale * 0.008;
@@ -2180,15 +3200,15 @@ function buildGhostTool(normal, toolLen, zOffset, sceneScale, stoneOk, toolRadiu
     ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upDir);
     group.add(ring);
   } else {
-    const tipGeo = new THREE.SphereGeometry(sceneScale * 0.015, 16, 16);
+    const tipGeo = new THREE.SphereGeometry(sceneScale * 0.028, 16, 16);
     const tipMat = new THREE.MeshStandardMaterial({ color: ghostColor, emissive: ghostColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.5, depthTest: false });
     const tip = new THREE.Mesh(tipGeo, tipMat);
     tip.position.copy(ghostFeature);
     group.add(tip);
   }
 
-  // Small CoR ball at ghost pivot
-  const pivotGeo = new THREE.SphereGeometry(sceneScale * 0.012, 12, 12);
+  // CoR ball at ghost pivot
+  const pivotGeo = new THREE.SphereGeometry(sceneScale * 0.025, 12, 12);
   const pivotMat = new THREE.MeshStandardMaterial({ color: ghostColor, emissive: ghostColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.5, depthTest: false });
   const pivot = new THREE.Mesh(pivotGeo, pivotMat);
   pivot.position.copy(ghostPivot);
@@ -2206,8 +3226,10 @@ function buildGhostTool(normal, toolLen, zOffset, sceneScale, stoneOk, toolRadiu
   sceneObjects.ghostTool = group;
 }
 
-function buildReachTool(normal, toolLen, corDisplayZ, sceneScale, reachable, toolRadius) {
+function buildReachTool(normal, toolLen, corDisplayZ, sceneScale, reachable, toolRadius, xyOffset) {
   const group = new THREE.Group();
+  const ox = xyOffset ? xyOffset.x : 0;
+  const oy = xyOffset ? xyOffset.y : 0;
 
   // CoR is positioned at the lower limit in display coords
   const dispDir = new THREE.Vector3(-normal[0], -normal[1], -normal[2]).normalize();
@@ -2215,11 +3237,13 @@ function buildReachTool(normal, toolLen, corDisplayZ, sceneScale, reachable, too
 
   // CoR position: same XY as the original pivot, but at the lower limit Z
   const corPos = dispDir.clone().multiplyScalar(-toolLen);
+  corPos.x += ox;
+  corPos.y += oy;
   corPos.z = corDisplayZ;
   // Tool tip: CoR + toolLen along surface normal direction (toward feature)
   const tipPos = corPos.clone().add(dispDir.clone().multiplyScalar(toolLen));
 
-  const reachColor = 0x555555;
+  const reachColor = (reachable === false) ? SChex('red') : 0x555555;
 
   // Tool shaft
   const shaftRadius = sceneScale * 0.008;
@@ -2246,15 +3270,15 @@ function buildReachTool(normal, toolLen, corDisplayZ, sceneScale, reachable, too
     ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upDir);
     group.add(ring);
   } else {
-    const tipGeo = new THREE.SphereGeometry(sceneScale * 0.015, 16, 16);
+    const tipGeo = new THREE.SphereGeometry(sceneScale * 0.028, 16, 16);
     const tipMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.5, depthTest: false });
     const tip = new THREE.Mesh(tipGeo, tipMat);
     tip.position.copy(tipPos);
     group.add(tip);
   }
 
-  // Small CoR ball
-  const pivotGeo = new THREE.SphereGeometry(sceneScale * 0.012, 12, 12);
+  // CoR ball
+  const pivotGeo = new THREE.SphereGeometry(sceneScale * 0.025, 12, 12);
   const pivotMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.5, depthTest: false });
   const pivot = new THREE.Mesh(pivotGeo, pivotMat);
   pivot.position.copy(corPos);
@@ -2272,20 +3296,22 @@ function buildReachTool(normal, toolLen, corDisplayZ, sceneScale, reachable, too
   sceneObjects.reachTool = group;
 }
 
-function buildAzimuthRing(A, sceneScale) {
+function buildAzimuthRing(A, sceneScale, xyOffset) {
   const group = new THREE.Group();
-  const featurePos = new THREE.Vector3(0, 0, 0);
+  const ox = xyOffset ? xyOffset.x : 0;
+  const oy = xyOffset ? xyOffset.y : 0;
+  const featurePos = new THREE.Vector3(ox, oy, 0);
   const radius = sceneScale * 0.2;
 
   const ringGeo = new THREE.RingGeometry(radius - 1, radius + 1, 64);
-  const ringMat = new THREE.MeshBasicMaterial({ color: 0x58a6ff, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+  const ringMat = new THREE.MeshBasicMaterial({ color: SChex('blue'), transparent: true, opacity: 0.2, side: THREE.DoubleSide });
   const ring = new THREE.Mesh(ringGeo, ringMat);
   ring.position.copy(featurePos);
   group.add(ring);
 
-  const lineEnd = new THREE.Vector3(radius * Math.cos(A), radius * Math.sin(A), 0);
+  const lineEnd = new THREE.Vector3(ox + radius * Math.cos(A), oy + radius * Math.sin(A), 0);
   const lineGeo = new THREE.BufferGeometry().setFromPoints([featurePos.clone(), lineEnd]);
-  const lineMat = new THREE.LineBasicMaterial({ color: 0x58a6ff, opacity: 0.6, transparent: true });
+  const lineMat = new THREE.LineBasicMaterial({ color: SChex('blue'), opacity: 0.6, transparent: true });
   group.add(new THREE.Line(lineGeo, lineMat));
 
   // Push label further out past the ring edge so it doesn't overlap feature/arc labels
@@ -2331,7 +3357,7 @@ function buildCArc(A, C, color, groupKey, labelPrefix, sceneScale, opacity, cent
     const side = (labelPrefix && labelPrefix.includes('Adj')) ? 1 : (isCmin ? 1 : -1);
     const off = sceneScale * 0.1 * side;
     const labelPos = tipPt.clone().add(new THREE.Vector3(perpX * off, perpY * off, 0));
-    const labelClass = color === 0x58a6ff ? 'label-blue' : (color === 0xff4444 ? 'label-red' : (color === 0xffaa00 ? 'label-amber' : 'label-green'));
+    const labelClass = color === SChex('blue') ? 'label-blue' : (color === SChex('red') ? 'label-red' : (color === SChex('amber') ? 'label-amber' : 'label-green'));
     addLabel(labelPos,
       `${labelPrefix}C=${toDeg(C).toFixed(1)}°`, labelClass, opacity);
   }
@@ -2391,6 +3417,12 @@ function updateScene(skipReframe) {
   const zRange = Math.abs(s.zLimit); // full range from table to Z limit
   const sceneScale = Math.max(s.toolLen, zRange, 400);
 
+  // Edge mode: position tool vectors at stone edge where A angle intersects
+  const edgeMode = document.getElementById('chk-edge-mode').checked;
+  const stoneHalfW = sceneScale * 0.3;
+  const stoneHalfD = sceneScale * 0.225;
+  const toolOffset = edgeMode ? getEdgeIntersection(s.A, stoneHalfW, stoneHalfD) : { x: 0, y: 0 };
+
   // Display coords: feature at (0,0,0). machineZ → display via machineZToDisplay(mz, fz).
   // Table (machine Z=0) is BELOW the feature in display.
   const tableZ = machineZToDisplay(0, fz);        // negative (below feature)
@@ -2420,30 +3452,34 @@ function updateScene(skipReframe) {
 
   // No clamping — show the tool where it actually is
   const feasible = s.featureOk && (s.reachable === null || s.reachable);
-  const origColor = feasible ? 0x58a6ff : 0xff4444;
-  const origDiskColor = feasible ? 0x00ff88 : 0xff4444;
-  buildToolVector(fo, s.plane.matrix[2], s.toolLen, origColor, 'toolOriginal', sceneScale, s.toolRadius, radiusDisplayOffset || undefined, origDiskColor);
+  const origColor = SChex('blue'); // shaft always blue
+  const origDiskColor = feasible ? SChex('green') : SChex('red');
+  buildToolVector(fo, s.plane.matrix[2], s.toolLen, origColor, 'toolOriginal', sceneScale, s.toolRadius, radiusDisplayOffset || undefined, origDiskColor, toolOffset);
   buildPivotPoint(fz, s.plane.matrix[2], s.toolLen, s.zLimit, s.C, 'pivotOriginal', 'CoR', sceneScale,
-    { featureZOffset: radiusDisplayOffset || 0, effectiveFeatureZ: effectiveFz, zLowerLimit: s.zLowerLimit });
+    { featureZOffset: radiusDisplayOffset || 0, effectiveFeatureZ: effectiveFz, zLowerLimit: s.zLowerLimit, xyOffset: toolOffset });
 
   // Use offset pivot position for downstream visuals
   const offsetPivotPos = pivotPos.clone();
+  offsetPivotPos.x += toolOffset.x;
+  offsetPivotPos.y += toolOffset.y;
   offsetPivotPos.z += radiusDisplayOffset;
 
   // Machine Z axis at pivot, ghost tool at Z limit, azimuth ring at feature, C arc at pivot
   buildMachineZAxis(offsetPivotPos, sceneScale);
   // Shift so ghost pivot lands at Z limit
   const ghostOffset = zLimitDisplay - pivotPos.z;
-  buildGhostTool(s.plane.matrix[2], s.toolLen, ghostOffset, sceneScale, s.stoneOk, s.toolRadius);
-
-  // Reach tool: shows tool at lowest CoR position (lower Z travel limit)
-  if (s.zLowerLimit !== null) {
-    const zLowerDisplay = machineZToDisplay(s.zLowerLimit, fz);
-    buildReachTool(s.plane.matrix[2], s.toolLen, zLowerDisplay, sceneScale, s.reachable, s.toolRadius);
+  if (showGhostTool) {
+    buildGhostTool(s.plane.matrix[2], s.toolLen, ghostOffset, sceneScale, s.stoneOk, s.toolRadius, toolOffset);
   }
 
-  buildAzimuthRing(s.A, sceneScale);
-  buildCArc(s.A, s.C, 0x58a6ff, 'cArcOriginal', '', sceneScale, undefined, offsetPivotPos);
+  // Reach tool: shows tool at lowest CoR position (lower Z travel limit)
+  if (showReachTool && s.zLowerLimit !== null) {
+    const zLowerDisplay = machineZToDisplay(s.zLowerLimit, fz);
+    buildReachTool(s.plane.matrix[2], s.toolLen, zLowerDisplay, sceneScale, s.reachable, s.toolRadius, toolOffset);
+  }
+
+  buildAzimuthRing(s.A, sceneScale, toolOffset);
+  buildCArc(s.A, s.C, SChex('blue'), 'cArcOriginal', '', sceneScale, undefined, offsetPivotPos);
 
 
   // Adjusted tool vector (only when toggled on)
@@ -2454,17 +3490,19 @@ function updateScene(skipReframe) {
     const adjEffectiveFz = (s.machMode === 'radius' && s.toolRadius > 0) ? fz - adjRadiusOff : fz;
     const adjDispDir = new THREE.Vector3(-s.adjusted.normal[0], -s.adjusted.normal[1], -s.adjusted.normal[2]).normalize();
     const adjPivotPos = adjDispDir.clone().multiplyScalar(-s.toolLen);
-    buildToolVector(fo, s.adjusted.normal, s.toolLen, 0x00ff88, 'toolAdjusted', sceneScale, s.toolRadius, adjRadiusDisplayOff || undefined);
+    adjPivotPos.x += toolOffset.x;
+    adjPivotPos.y += toolOffset.y;
+    buildToolVector(fo, s.adjusted.normal, s.toolLen, SChex('green'), 'toolAdjusted', sceneScale, s.toolRadius, adjRadiusDisplayOff || undefined, undefined, toolOffset);
     buildPivotPoint(fz, s.adjusted.normal, s.toolLen, s.zLimit, adjC, 'pivotAdjusted', 'Adj CoR', sceneScale,
-      { featureZOffset: adjRadiusDisplayOff || 0, effectiveFeatureZ: adjEffectiveFz });
+      { featureZOffset: adjRadiusDisplayOff || 0, effectiveFeatureZ: adjEffectiveFz, xyOffset: toolOffset });
     const adjOffsetPivot = adjPivotPos.clone();
     adjOffsetPivot.z += adjRadiusOffset;
-    buildCArc(s.A, adjC, 0x00ff88, 'cArcAdjusted', 'Adj ', sceneScale, undefined, adjOffsetPivot);
+    buildCArc(s.A, adjC, SChex('green'), 'cArcAdjusted', 'Adj ', sceneScale, undefined, adjOffsetPivot);
   }
 
   // Machining level label — offset well below and to the side so it clears arcs and tool labels
-  addLabel(new THREE.Vector3(sceneScale * 0.15, -sceneScale * 0.08, -sceneScale * 0.15),
-    `Machining Level (Z=${Math.abs(fz)})`, 'label-blue');
+  addLabel(new THREE.Vector3(toolOffset.x + sceneScale * 0.15, toolOffset.y - sceneScale * 0.08, -sceneScale * 0.15),
+    `Machining Level (Z=${Math.abs(fz)})`, 'label-amber');
 
   if (!skipReframe && !hasFramedOnce) {
     autoFrameCamera(s, sceneScale);
@@ -2544,10 +3582,41 @@ window.setView = function(view) {
 loadSettings();
 initScene();
 
-// Restore last file handle from IndexedDB
+document.getElementById('arc-gauge-toggle').addEventListener('mousedown', function(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  cycleArcGaugeMode();
+});
+
+// Arrow key navigation for batch results
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  if (batchResults.length === 0) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+  e.preventDefault();
+
+  const rows = Array.from(document.querySelectorAll('#batch-tbody tr[data-idx]'));
+  if (rows.length === 0) return;
+  const indices = rows.map(r => parseInt(r.dataset.idx));
+
+  const curPos = indices.indexOf(batchActiveIdx);
+  let newPos;
+  if (e.key === 'ArrowDown') {
+    newPos = curPos < 0 ? 0 : Math.min(curPos + 1, indices.length - 1);
+  } else {
+    newPos = curPos < 0 ? indices.length - 1 : Math.max(curPos - 1, 0);
+  }
+
+  viewBatchPlane(indices[newPos]);
+  const activeRow = document.querySelector('#batch-tbody tr.batch-row-active');
+  if (activeRow) activeRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+});
+
+// Restore recent files from IndexedDB
 (async () => {
   try {
-    const handle = await loadFileHandle();
+    const handle = await loadRecentFiles();
     if (handle) {
       fileHandle = handle;
       showFileName(handle.name);

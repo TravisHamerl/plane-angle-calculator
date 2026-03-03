@@ -8,7 +8,7 @@ Opens in any modern browser — no build step, no server, no dependencies beyond
 
 ## File
 
-- `index.html` — the entire application (~2,600 lines)
+- `index.html` — the entire application (~3,600 lines)
 
 ## Quick Start
 
@@ -25,6 +25,7 @@ Open `index.html` in a browser. Load a plane data file (Mastercam format or colo
 | Tool length | Distance from center of rotation (CoR) to tool tip | 300 mm |
 | Tool radius | Radius of the cutting tool | 50 mm (optional) |
 | Machining ref | Whether to reference tool center or tool edge (radius) | center / radius |
+| Safety margin | Warning threshold — flags when Z margin is tight | 20 mm (default) |
 | Z machining level | Height of the machining surface above the table | required |
 | Part height | Height of the part/stone above the table | optional |
 | Clearance height | Clearance plane above the part | optional |
@@ -76,6 +77,16 @@ Multiple planes separated by `----` lines. Planes marked `*** NOT USED ***` are 
 | `reachable` | `zPivot <= zLowerLimit` | CoR is within lower Z travel range |
 | `stoneOk` | Stone pivot >= zLimit | Tool clears the stone at Z limit |
 | `feasible` | featureOk AND reachable | Full feasibility |
+
+### Status States (3-level)
+
+All status indicators (cards, badges, batch table) use three consistent states:
+
+| State | Color | Condition |
+|-------|-------|-----------|
+| OK | Green | Margin >= safety margin |
+| CLOSE | Orange | OK but margin < safety margin |
+| EXCEEDED / UNREACHABLE | Red | Limit violated or tool cannot reach |
 
 ### CoR Z Display
 
@@ -138,15 +149,51 @@ Load a file with multiple planes (separated by `----`). The calculator:
 | Column | Meaning |
 |--------|---------|
 | Name | Plane name |
-| A° | Azimuth angle (display convention) |
 | C° | Tilt angle |
-| Mach | Machining level feasibility (green checkmark / red X) |
-| Clr | Clearance level feasibility |
-| C_min | Minimum tilt angle for Z limit |
+| A° | Azimuth angle (display convention) |
+| Machining | Status: OK (green) / CLOSE (orange) / EXCEEDED or UNREACHABLE (red) |
+| Clearance | Status: OK (green) / CLOSE (orange) / EXCEEDED (red) / — (no data) |
 
 ### Adjusted Plane
 
 When a plane is NOT feasible, the calculator auto-generates an adjusted plane with the minimum C angle that fits within the Z limit. The adjusted matrix is reconstructed via Gram-Schmidt orthogonalization. Can be toggled in 3D view and copied to clipboard.
+
+## Manual Mode
+
+Toggle "Manual" checkbox to switch from file-based analysis to manual constraint exploration. In manual mode, you enter machine/tool parameters and the calculator shows the angle constraints without loading a plane file.
+
+### Manual Mode Features
+
+- **Angle constraint cards** — Shows steepest (machining), steepest (clearance), and shallowest (reachable) C angles
+- **Safety margin sub-ranges** — Orange warning text shows which angle ranges fall within the safety margin
+- **Comfortable range** — Green text shows the safe C range with safety margin applied
+- **Arc gauge** — Visual pie chart showing safe/unsafe angle zones with constraint boundaries
+- **3D scene** — Shows constraint geometry (Z limits, tool reach) without a specific plane
+- **Bidirectional mode switching** — Clean transitions between file and manual mode (no leftover elements)
+
+### Arc Gauge Info Panel
+
+When in manual mode, the arc gauge info panel (top-left of 3D view) shows:
+- Constraint angles with their identity color (amber for machining, blue for clearance, green for reachable)
+- Safety margin angles in orange: "(safe X.X°)"
+
+## Color System
+
+Centralized color system with normal and colorblind palettes:
+
+| Name | Normal | Colorblind | CSS Variable | Usage |
+|------|--------|------------|--------------|-------|
+| green | `#00ff88` | `#0072B2` | `--green` | OK/safe states |
+| red | `#ff4444` | `#D55E00` | `--red` | Fail/exceeded states |
+| amber | `#ffaa00` | `#F0E442` | `--amber` | Machining identity, card borders |
+| blue | `#58a6ff` | `#CC79A7` | `--blue` | Clearance identity |
+| orange | `#ff6b35` | `#E8751A` | `--orange` | Safety margin warnings, CLOSE status |
+
+- `SC(name)` — get hex color for current mode
+- `SCrgba(name, alpha)` — get rgba color string
+- `SChex(name)` — get numeric hex for Three.js
+- `applyColorMode()` — sets CSS custom properties
+- Colorblind mode uses higher alpha (0.35-0.45) for arc gauge wedge fills due to darker palette
 
 ## Settings Persistence
 
@@ -189,6 +236,9 @@ All inputs trigger automatic recalculation on change — no manual Calculate but
 | `aDisplayDeg(A)` | Convert internal A to display convention (+90°) |
 | `machineZToDisplay(mz, fz)` | Convert machine Z to display coords |
 | `calculate()` | Full single-plane calculation pipeline |
+| `calculateManual()` | Manual mode constraint calculation |
+| `displayManualResults(...)` | Render manual mode cards, details, arc gauge |
+| `toggleManualMode(enabled)` | Switch between file and manual mode |
 | `calculateBatch()` | Full batch calculation pipeline |
 | `buildToolVector(...)` | Create tool shaft, disk, ring, arrow in 3D |
 | `buildPivotPoint(...)` | Create CoR cylinder with wireframe crosshairs |
