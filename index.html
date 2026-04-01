@@ -80,10 +80,10 @@
   }
 
   .left-panel {
-    width: 520px;
-    min-width: 440px;
-    max-width: 520px;
-    border-right: 1px solid var(--border);
+    width: 460px;
+    min-width: 260px;
+    max-width: 700px;
+    flex-shrink: 0;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 12px;
@@ -91,6 +91,20 @@
     flex-direction: column;
     gap: 10px;
     min-height: 0; /* critical for flex scroll */
+  }
+
+  .resize-handle {
+    width: 5px;
+    flex-shrink: 0;
+    background: var(--border);
+    cursor: col-resize;
+    transition: background 0.15s;
+    position: relative;
+    z-index: 20;
+  }
+  .resize-handle:hover,
+  .resize-handle.dragging {
+    background: var(--accent);
   }
 
   .right-panel {
@@ -381,9 +395,12 @@
 
   .view-buttons {
     position: absolute;
-    top: 8px;
+    bottom: 8px;
     right: 8px;
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 460px;
     gap: 4px;
     z-index: 10;
   }
@@ -619,6 +636,11 @@
           <span class="unit">mm</span>
         </div>
         <div class="field-row">
+          <label>Platform height</label>
+          <input type="number" id="in-platformheight" value="" step="0.1" placeholder="optional" min="0">
+          <span class="unit">mm</span>
+        </div>
+        <div class="field-row">
           <label>Part clearance height</label>
           <input type="number" id="in-clearanceheight" value="" step="0.1" placeholder="optional" min="0">
           <span class="unit">mm</span>
@@ -685,7 +707,16 @@
     <!-- Error display -->
     <div id="error-display" class="error-msg hidden"></div>
 
+    <!-- Accessibility -->
+    <div style="margin-top:auto;padding-top:8px;border-top:1px solid var(--border)">
+      <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-dim);cursor:pointer">
+        <input type="checkbox" id="chk-colorblind" style="margin:0"> Colorblind mode
+      </label>
+    </div>
+
   </div>
+
+  <div class="resize-handle" id="panel-resize-handle"></div>
 
   <div class="right-panel">
     <canvas id="three-canvas"></canvas>
@@ -693,24 +724,14 @@
     <canvas id="arc-gauge" width="160" height="180" style="position:absolute;top:22px;left:10px;pointer-events:none;display:none"></canvas>
     <div id="arc-gauge-info" style="position:absolute;top:22px;left:180px;z-index:100;display:none;
       pointer-events:auto;font-family:'JetBrains Mono',Consolas,monospace;font-size:11px;
-      color:var(--text-dim);display:flex;gap:16px"></div>
+      color:var(--text-dim);flex-wrap:wrap;align-content:flex-start;gap:8px;
+      max-width:min(420px,calc(100% - 200px))"></div>
     <div id="constraint-gauge-title" style="position:absolute;bottom:222px;left:10px;z-index:100;display:none;color:#aaa;font-size:11px;font-weight:600;letter-spacing:0.5px">Machining Level</div>
     <canvas id="constraint-gauge" width="160" height="180" style="position:absolute;bottom:40px;left:10px;pointer-events:none;display:none"></canvas>
     <div id="constraint-gauge-info" style="position:absolute;bottom:40px;left:180px;z-index:100;display:none;
       pointer-events:auto;font-family:'JetBrains Mono',Consolas,monospace;font-size:11px;
-      color:var(--text-dim)"></div>
-    <div id="status-badges" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);
-      z-index:100;display:none;gap:12px;pointer-events:none;
-      font-family:'JetBrains Mono',Consolas,monospace">
-      <div id="badge-machining" style="text-align:center">
-        <div style="color:var(--amber);font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:3px">MACHINING</div>
-        <div id="badge-machining-box" style="padding:6px 16px;border-radius:4px;font-size:13px;font-weight:700;color:#fff"></div>
-      </div>
-      <div id="badge-clearance" style="text-align:center">
-        <div style="color:var(--blue);font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:3px">PART CLEARANCE</div>
-        <div id="badge-clearance-box" style="padding:6px 16px;border-radius:4px;font-size:13px;font-weight:700;color:#fff"></div>
-      </div>
-    </div>
+      color:var(--text-dim);flex-wrap:wrap;align-content:flex-start;gap:8px;
+      max-width:min(420px,calc(100% - 200px))"></div>
     <!-- 3D scene labels rendered here -->
     <div class="view-buttons">
       <button onclick="setView('top')" title="Top view">Top</button>
@@ -731,12 +752,6 @@
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;right:8px;background:var(--bg-section);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-family:'JetBrains Mono',Consolas,monospace;z-index:50">
-  <div style="font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Accessibility</div>
-  <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-dim);cursor:pointer">
-    <input type="checkbox" id="chk-colorblind" style="margin:0"> Colorblind mode
-  </label>
-</div>
 
 <script type="importmap">
 {
@@ -766,6 +781,7 @@ let sceneObjects = {
   machiningPlane: null,
   zLimitPlane: null,
   zLowerLimitPlane: null,
+  axes: null,
   toolOriginal: null,
   toolAdjusted: null,
   pivotOriginal: null,
@@ -1114,6 +1130,7 @@ window.calculate = function() {
     const warnToleranceVal = document.getElementById('in-warntolerance').value;
     const warnTolerance = warnToleranceVal ? parseFloat(warnToleranceVal) : 20;
     const partHeightVal = document.getElementById('in-partheight').value;
+    const platformHeightVal = document.getElementById('in-platformheight').value;
     const clearanceHeightVal = document.getElementById('in-clearanceheight').value;
     if (isNaN(toolLen) || toolLen <= 0) throw new Error('Tool length is required and must be > 0');
     if (isNaN(zLimit)) throw new Error('Z limit is required');
@@ -1148,10 +1165,11 @@ window.calculate = function() {
       plane = parsePlaneText(planeText);
     }
 
-    // Clearance level = -(partHeight + clearanceHeight), only if both are provided
+    // Clearance level = -(partHeight + platformHeight + clearanceHeight), only if partHeight and clearanceHeight provided
     const partHeight = partHeightVal ? parseFloat(partHeightVal) : null;
+    const platformHeight = platformHeightVal ? parseFloat(platformHeightVal) : 0;
     const clearanceHeight = clearanceHeightVal ? parseFloat(clearanceHeightVal) : null;
-    const zStone = (partHeight !== null && clearanceHeight !== null) ? -(partHeight + clearanceHeight) : null;
+    const zStone = (partHeight !== null && clearanceHeight !== null) ? -((partHeight + platformHeight) + clearanceHeight) : null;
 
     const normal = plane.matrix[2];
     const { A, C } = extractAngles(normal);
@@ -1314,7 +1332,7 @@ window.calculate = function() {
 
     // Save state for 3D (before showAnalysis so gauge button can access adjusted data)
     currentState = {
-      plane, A, C, zFeature, zLimit, toolLen, toolRadius, machMode, zStone, partHeight,
+      plane, A, C, zFeature, zLimit, toolLen, toolRadius, machMode, zStone, partHeight, platformHeight,
       zPivotFeature, featureOk, zPivotStone, stoneOk,
       zLowerLimit, reachable, cMaxReach,
       isOk, cMinBinding, adjusted: adjustedData,
@@ -1460,37 +1478,6 @@ function showAnalysis(a) {
     currentA, a.featureOk, a.stoneOk, a.reachable, machMargin, reachMargin,
     cgWarnFeature, cgWarnStone, cgWarnReach,
     a.cMaxFeatureC, a.cMaxStoneC, clrMarginForGauge);
-
-  // --- Status badges in 3D view ---
-  const badgesEl = document.getElementById('status-badges');
-  if (badgesEl) {
-    badgesEl.style.display = 'flex';
-
-    // Clearance badge box
-    const clrBox = document.getElementById('badge-clearance-box');
-    if (a.zPivotStone !== null) {
-      const clrM = a.zPivotStone - a.zLimit;
-      const clrKey = !a.stoneOk ? 'red' : (clrM < wt ? 'warn' : 'green');
-      const clrText = !a.stoneOk ? 'EXCEEDED' : (clrM < wt ? 'CLOSE TO LIMIT' : 'OK');
-      clrBox.textContent = clrText;
-      clrBox.style.background = SCrgba(clrKey, 0.55);
-      clrBox.style.color = '#fff';
-      document.getElementById('badge-clearance').style.display = '';
-    } else {
-      clrBox.textContent = '—';
-      clrBox.style.background = 'rgba(255,255,255,0.05)';
-      clrBox.style.color = 'var(--text-dim)';
-      document.getElementById('badge-clearance').style.display = '';
-    }
-
-    // Machining badge box
-    const machBox = document.getElementById('badge-machining-box');
-    const machKey = !machOk ? 'red' : (machWorstMargin < wt ? 'warn' : 'green');
-    const machText = !machOk ? machFailLabel : (machWorstMargin < wt ? 'CLOSE TO LIMIT' : 'OK');
-    machBox.textContent = machText;
-    machBox.style.background = SCrgba(machKey, 0.55);
-    machBox.style.color = '#fff';
-  }
 
   // --- Detail rows ---
   const detailsEl = document.getElementById('result-details');
@@ -1668,6 +1655,13 @@ function drawMachGauge(currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
   if (cgt) cgt.style.display = 'block';
 }
 
+function getGaugeSize() {
+  const panel = document.querySelector('.right-panel');
+  const h = panel ? panel.clientHeight : 500;
+  // Target ~18% of panel height, clamped 75–120px.
+  return Math.round(Math.min(120, Math.max(75, h * 0.18)));
+}
+
 function _drawArcGaugeCore(canvasId, infoId, gaugeMode,
     currentC, cMin, cMax, cMinFeature, cMinStone, cMaxReach,
     currentA, featureOk, stoneOk, reachable, zMarginUpper, zMarginLower,
@@ -1677,6 +1671,29 @@ function _drawArcGaugeCore(canvasId, infoId, gaugeMode,
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   canvas.style.display = 'block';
+
+  // Scale canvas and reposition related elements to fit panel height
+  const gs = getGaugeSize();
+  if (canvas.width !== gs) canvas.width = gs;
+  if (canvas.height !== gs + 20) canvas.height = gs + 20;
+  const infoLeft = gs + 20; // info panel starts just right of canvas
+
+  // Reposition title and info panel based on current gauge size
+  const titleId = gaugeMode === 0 ? 'arc-gauge-title' : 'constraint-gauge-title';
+  const titleEl = document.getElementById(titleId);
+  const infoEl2 = document.getElementById(infoId);
+  if (gaugeMode === 0) {
+    // Top gauge — positioned from top
+    canvas.style.top = '22px';
+    if (titleEl) titleEl.style.top = '6px';
+    if (infoEl2) { infoEl2.style.top = '22px'; infoEl2.style.left = infoLeft + 'px'; }
+  } else {
+    // Bottom gauge — positioned from bottom
+    const bottomOffset = 40;
+    const titleOffset = bottomOffset + gs + 20 + 8;
+    if (titleEl) titleEl.style.bottom = titleOffset + 'px';
+    if (infoEl2) { infoEl2.style.bottom = bottomOffset + 'px'; infoEl2.style.left = infoLeft + 'px'; }
+  }
 
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
@@ -1908,7 +1925,7 @@ function _drawArcGaugeCore(canvasId, infoId, gaugeMode,
         if (stoneOk === null) {
           statusLabel = '<span style="color:var(--text-dim)">No part clearance data</span>';
         } else if (stoneOk) {
-          statusLabel = '<span style="color:var(--green);font-weight:700;font-size:14px">OK</span>';
+          statusLabel = '<span style="color:var(--green)">OK</span>';
         } else {
           const safeAngleClr = (currentState && currentState.adjustedClr) ? toDeg(currentState.adjustedClr.C) : cMinStone;
           statusLabel = '<span style="color:var(--red);font-weight:700">UPPER Z LIMIT EXCEEDED</span>';
@@ -1917,7 +1934,7 @@ function _drawArcGaugeCore(canvasId, infoId, gaugeMode,
       } else {
         const machOk2 = featureOk && (reachable === null || reachable);
         if (machOk2) {
-          statusLabel = '<span style="color:var(--green);font-weight:700;font-size:14px">OK</span>';
+          statusLabel = '<span style="color:var(--green)">OK</span>';
         } else if (!featureOk) {
           const safeAngle = (currentState && currentState.adjustedMach) ? toDeg(currentState.adjustedMach.C) : cMinFeature;
           statusLabel = '<span style="color:var(--red);font-weight:700">EXCEEDED</span>';
@@ -2005,9 +2022,10 @@ function _drawArcGaugeCore(canvasId, infoId, gaugeMode,
         }
       }
 
-      const _ts = 'color:#777;font-size:9px;font-weight:600;letter-spacing:0.5px;margin-bottom:3px';
+      const _ts = 'color:#777;font-size:9px;font-weight:600;letter-spacing:0.5px;margin-bottom:4px';
       const _bs = 'background:rgba(10,14,20,0.9);padding:8px 12px;border-radius:4px;line-height:1.6';
-      let html = `<div style="${_bs}"><div style="${_ts}">STATUS</div>${statusLabel}</div>`;
+      const _statusStyle = 'font-size:20px;font-weight:800;letter-spacing:1px;line-height:1.2';
+      let html = `<div style="${_bs}"><div style="${_ts}">STATUS</div><div style="${_statusStyle}">${statusLabel}</div></div>`;
       if (fixHtml || adjBtnHtml) {
         html += `<div style="${_bs}"><div style="${_ts}">ADJUSTMENT</div>${fixHtml}${adjBtnHtml}</div>`;
       }
@@ -2019,8 +2037,7 @@ function _drawArcGaugeCore(canvasId, infoId, gaugeMode,
 
 function hideArcGauge() {
   ['arc-gauge', 'arc-gauge-info', 'arc-gauge-title',
-   'constraint-gauge', 'constraint-gauge-info', 'constraint-gauge-title',
-   'status-badges'].forEach(id => {
+   'constraint-gauge', 'constraint-gauge-info', 'constraint-gauge-title'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -2338,10 +2355,12 @@ function calculateBatch() {
   const toolLen = parseFloat(document.getElementById('in-toollen').value);
   const globalZFeature = -Math.abs(parseFloat(document.getElementById('in-zfeature').value));
   const partHeightVal = document.getElementById('in-partheight').value;
+  const platformHeightVal = document.getElementById('in-platformheight').value;
   const clearanceHeightVal = document.getElementById('in-clearanceheight').value;
   const partHeight = partHeightVal ? parseFloat(partHeightVal) : null;
+  const platformHeight = platformHeightVal ? parseFloat(platformHeightVal) : 0;
   const clearanceHeight = clearanceHeightVal ? parseFloat(clearanceHeightVal) : null;
-  const globalZStone = (partHeight !== null && clearanceHeight !== null) ? -(partHeight + clearanceHeight) : null;
+  const globalZStone = (partHeight !== null && clearanceHeight !== null) ? -((partHeight + platformHeight) + clearanceHeight) : null;
   const toolRadiusVal = document.getElementById('in-toolradius').value;
   const toolRadius = toolRadiusVal ? parseFloat(toolRadiusVal) : 0;
   const machMode = document.getElementById('in-machmode').value;
@@ -2689,6 +2708,7 @@ function saveSettings() {
     warnTolerance: document.getElementById('in-warntolerance').value,
     zFeature: document.getElementById('in-zfeature').value,
     partHeight: document.getElementById('in-partheight').value,
+    platformHeight: document.getElementById('in-platformheight').value,
     clearanceHeight: document.getElementById('in-clearanceheight').value,
     edgeMode: document.getElementById('chk-edge-mode').checked,
     showGhostTool,
@@ -2718,6 +2738,7 @@ function loadSettings() {
       if (data.warnTolerance) document.getElementById('in-warntolerance').value = data.warnTolerance;
       if (data.zFeature) document.getElementById('in-zfeature').value = data.zFeature;
       if (data.partHeight) document.getElementById('in-partheight').value = data.partHeight;
+      if (data.platformHeight) document.getElementById('in-platformheight').value = data.platformHeight;
       if (data.clearanceHeight) document.getElementById('in-clearanceheight').value = data.clearanceHeight;
       if (data.edgeMode) document.getElementById('chk-edge-mode').checked = data.edgeMode;
       if (data.showGhostTool !== undefined) { showGhostTool = data.showGhostTool; document.getElementById('chk-ghost-tool').checked = showGhostTool; }
@@ -2760,6 +2781,7 @@ document.getElementById('in-machmode').addEventListener('change', function() {
 document.getElementById('in-warntolerance').addEventListener('change', onInputChange);
 document.getElementById('in-zfeature').addEventListener('change', onInputChange);
 document.getElementById('in-partheight').addEventListener('change', onInputChange);
+document.getElementById('in-platformheight').addEventListener('change', onInputChange);
 document.getElementById('in-clearanceheight').addEventListener('change', onInputChange);
 document.getElementById('in-plane').addEventListener('input', onInputChange);
 document.getElementById('in-angle-c').addEventListener('change', onInputChange);
@@ -2847,11 +2869,14 @@ function initScene() {
   dirLight2.position.set(-200, 300, 100);
   scene.add(dirLight2);
 
-  // Axes helper (subtle)
-  const axes = new THREE.AxesHelper(50);
-  axes.material.opacity = 0.3;
+  // Axes helper — positioned at rear-right table corner in buildTable()
+  const axes = new THREE.AxesHelper(300);
+  axes.material.opacity = 0.8;
   axes.material.transparent = true;
+  axes.material.depthTest = false;
+  axes.renderOrder = 5;
   scene.add(axes);
+  sceneObjects.axes = axes;
 
   resize();
   window.addEventListener('resize', resize);
@@ -2868,6 +2893,8 @@ function resize() {
   renderer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+  if (lastGaugeArgs) drawArcGauge(...lastGaugeArgs);
+  if (lastMachGaugeArgs) drawMachGauge(...lastMachGaugeArgs);
 }
 
 function animate() {
@@ -2931,7 +2958,7 @@ function buildTable(center) {
   // Grid — use rectangular grid via scaling a square GridHelper
   // GridHelper is always square, so we build a custom grid from lines
   const gridGroup = new THREE.Group();
-  const gridMat = new THREE.LineBasicMaterial({ color: 0x2a3a4a, transparent: true, opacity: 0.5 });
+  const gridMat = new THREE.LineBasicMaterial({ color: 0x2a3a4a, transparent: true, opacity: 0.5, depthTest: false });
   const gridSpacing = 250; // mm between grid lines
 
   // Lines parallel to X axis (varying Y)
@@ -2955,9 +2982,9 @@ function buildTable(center) {
 
   // Solid table surface
   const planeGeo = new THREE.PlaneGeometry(TABLE_X, TABLE_Y);
-  const planeMat = new THREE.MeshStandardMaterial({ color: 0x1a2535, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
+  const planeMat = new THREE.MeshStandardMaterial({ color: 0x1a2535, transparent: true, opacity: 0.5, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 4, polygonOffsetUnits: 4 });
   const planeMesh = new THREE.Mesh(planeGeo, planeMat);
-  planeMesh.position.set(center.x, center.y, center.z - 0.5);
+  planeMesh.position.set(center.x, center.y, center.z);
   group.add(planeMesh);
 
   // Table border — thicker outline
@@ -2969,8 +2996,10 @@ function buildTable(center) {
     new THREE.Vector3(-TABLE_X / 2, -TABLE_Y / 2, 0),
   ].map(p => p.add(center));
   const borderGeo = new THREE.BufferGeometry().setFromPoints(borderPts);
-  const borderMat = new THREE.LineBasicMaterial({ color: 0x3a4a5a });
-  group.add(new THREE.Line(borderGeo, borderMat));
+  const borderMat = new THREE.LineBasicMaterial({ color: 0x3a4a5a, depthTest: false });
+  const borderLine = new THREE.Line(borderGeo, borderMat);
+  borderLine.renderOrder = 1;
+  group.add(borderLine);
 
   // Front edge highlight — bright stripe along -Y edge (operator side)
   const frontPts = [
@@ -2978,8 +3007,10 @@ function buildTable(center) {
     new THREE.Vector3(TABLE_X / 2 + center.x, -TABLE_Y / 2 + center.y, center.z + 0.5),
   ];
   const frontGeo = new THREE.BufferGeometry().setFromPoints(frontPts);
-  const frontMat = new THREE.LineBasicMaterial({ color: SChex('blue'), linewidth: 2 });
-  group.add(new THREE.Line(frontGeo, frontMat));
+  const frontMat = new THREE.LineBasicMaterial({ color: SChex('blue'), linewidth: 2, depthTest: false });
+  const frontLine = new THREE.Line(frontGeo, frontMat);
+  frontLine.renderOrder = 2;
+  group.add(frontLine);
 
   // Side labels
   addLabel(new THREE.Vector3(center.x, -TABLE_Y / 2 + center.y - 40, center.z), 'FRONT (operator)', '');
@@ -2989,6 +3020,16 @@ function buildTable(center) {
 
   scene.add(group);
   sceneObjects.table = group;
+
+  // Reposition axes gnomon to rear-right corner of table
+  if (sceneObjects.axes) {
+    const { TABLE_X, TABLE_Y } = getTableDims();
+    sceneObjects.axes.position.set(
+      center.x + TABLE_X / 2,
+      center.y + TABLE_Y / 2,
+      center.z
+    );
+  }
 }
 
 function buildReachRectangle(tipReach, tableZ) {
@@ -3018,8 +3059,10 @@ function buildReachRectangle(tipReach, tableZ) {
     new THREE.Vector3(tipCx - tipHx, tipCy - tipHy, z),
   ];
   const tipGeo = new THREE.BufferGeometry().setFromPoints(tipPts);
-  const tipMat = new THREE.LineBasicMaterial({ color: SChex('green'), linewidth: 2 });
-  group.add(new THREE.Line(tipGeo, tipMat));
+  const tipMat = new THREE.LineBasicMaterial({ color: SChex('green'), linewidth: 2, depthTest: false });
+  const tipLine = new THREE.Line(tipGeo, tipMat);
+  tipLine.renderOrder = 2;
+  group.add(tipLine);
 
   // Label at the offset corner (top-right of tip reach = machine origin side)
   addLabel(new THREE.Vector3(tipCx + tipHx + 30, tipCy + tipHy + 30, z),
@@ -3029,21 +3072,46 @@ function buildReachRectangle(tipReach, tableZ) {
   sceneObjects.reachRect = group;
 }
 
-function buildStone(partHeight, zStone, featureZ, sceneScale) {
+function buildStone(partHeight, platformHeight, zStone, featureZ, sceneScale) {
   const tableZ = machineZToDisplay(0, featureZ);
   const w = sceneScale * 0.6;
   const d = sceneScale * 0.45;
   const group = new THREE.Group();
 
-  // Part box: from table up to part height
+  // Platform box: sits on the table, slightly smaller footprint, dark charcoal
+  const platH_mm = (platformHeight && platformHeight > 0) ? platformHeight : 0;
+  if (platH_mm > 0) {
+    const platTopZ = machineZToDisplay(-platH_mm, featureZ);
+    const platH = platTopZ - tableZ;
+    if (platH > 1) {
+      const pw = w * 0.72;
+      const pd = d * 0.72;
+      const platGeo = new THREE.BoxGeometry(pw, pd, platH);
+      const platMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2a, roughness: 0.9, transparent: true, opacity: 0.85 });
+      const platMesh = new THREE.Mesh(platGeo, platMat);
+      platMesh.position.set(0, 0, tableZ + platH / 2);
+      group.add(platMesh);
+
+      const platEdges = new THREE.EdgesGeometry(platGeo);
+      const platEdgeMat = new THREE.LineBasicMaterial({ color: 0x4a4a6a, opacity: 0.7, transparent: true });
+      const platWire = new THREE.LineSegments(platEdges, platEdgeMat);
+      platWire.position.copy(platMesh.position);
+      group.add(platWire);
+
+      addLabel(new THREE.Vector3(-w / 2 - 10, 0, tableZ + platH / 2), `Platform (${platH_mm} mm)`, 'label-dim');
+    }
+  }
+
+  // Part box: sits on top of platform (or table if no platform)
   if (partHeight !== null && partHeight > 0) {
-    const partTopZ = machineZToDisplay(-partHeight, featureZ);
-    const partH = partTopZ - tableZ;
+    const partBottomZ = machineZToDisplay(-platH_mm, featureZ);
+    const partTopZ = machineZToDisplay(-(platH_mm + partHeight), featureZ);
+    const partH = partTopZ - partBottomZ;
     if (partH > 1) {
       const geo = new THREE.BoxGeometry(w, d, partH);
-      const mat = new THREE.MeshStandardMaterial({ color: 0xd4c5a9, roughness: 0.8, transparent: true, opacity: 0.5 });
+      const mat = new THREE.MeshStandardMaterial({ color: 0xd4c5a9, roughness: 0.8, transparent: true, opacity: 0.75 });
       const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(0, 0, tableZ + partH / 2);
+      mesh.position.set(0, 0, partBottomZ + partH / 2);
       group.add(mesh);
 
       const edges = new THREE.EdgesGeometry(geo);
@@ -3052,7 +3120,7 @@ function buildStone(partHeight, zStone, featureZ, sceneScale) {
       wireframe.position.copy(mesh.position);
       group.add(wireframe);
 
-      addLabel(new THREE.Vector3(-w / 2 - 10, 0, partTopZ), `Part Top (${partHeight})`, 'label-dim');
+      addLabel(new THREE.Vector3(-w / 2 - 10, 0, partTopZ), `Part Top (${platH_mm + partHeight} mm)`, 'label-dim');
     }
   }
 
@@ -3062,9 +3130,10 @@ function buildStone(partHeight, zStone, featureZ, sceneScale) {
     const cw = sceneScale * 0.8;
     const cd = sceneScale * 0.6;
     const planeGeo = new THREE.PlaneGeometry(cw, cd);
-    const planeMat = new THREE.MeshStandardMaterial({ color: SChex('blue'), transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+    const planeMat = new THREE.MeshStandardMaterial({ color: SChex('blue'), transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthTest: false, depthWrite: false });
     const planeMesh = new THREE.Mesh(planeGeo, planeMat);
     planeMesh.position.set(0, 0, clearTopZ);
+    planeMesh.renderOrder = 2;
     group.add(planeMesh);
 
     // Border frame
@@ -3073,8 +3142,9 @@ function buildStone(partHeight, zStone, featureZ, sceneScale) {
       new THREE.Vector3(cw/2, cd/2, clearTopZ), new THREE.Vector3(-cw/2, cd/2, clearTopZ),
       new THREE.Vector3(-cw/2, -cd/2, clearTopZ),
     ]);
-    const borderMat = new THREE.LineBasicMaterial({ color: SChex('blue'), opacity: 0.6, transparent: true });
+    const borderMat = new THREE.LineBasicMaterial({ color: SChex('blue'), opacity: 0.6, transparent: true, depthTest: false });
     const border = new THREE.Line(borderGeo, borderMat);
+    border.renderOrder = 2;
     group.add(border);
 
     addLabel(new THREE.Vector3(cw / 2 + 10, 0, clearTopZ), `Part Clearance Level (Z=${Math.abs(zStone)})`, 'label-blue');
@@ -3091,7 +3161,7 @@ function buildMachiningPlane(sceneScale) {
   const displayZ = 0; // machining level is at the feature origin
 
   const planeGeo = new THREE.PlaneGeometry(w, d);
-  const planeMat = new THREE.MeshStandardMaterial({ color: SChex('amber'), transparent: true, opacity: 0.15, side: THREE.DoubleSide, depthTest: false, depthWrite: false });
+  const planeMat = new THREE.MeshStandardMaterial({ color: SChex('amber'), transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthTest: false, depthWrite: false });
   const planeMesh = new THREE.Mesh(planeGeo, planeMat);
   planeMesh.position.set(0, 0, displayZ);
   planeMesh.renderOrder = 1;
@@ -3143,7 +3213,7 @@ function buildZLowerLimitPlane(zLowerLimit, featureZ, sceneScale) {
   const d = sceneScale * 0.6;
 
   const planeGeo = new THREE.PlaneGeometry(w, d);
-  const planeMat = new THREE.MeshStandardMaterial({ color: 0x555555, transparent: true, opacity: 0.15, side: THREE.DoubleSide, depthTest: false, depthWrite: false });
+  const planeMat = new THREE.MeshStandardMaterial({ color: SChex('red'), transparent: true, opacity: 0.15, side: THREE.DoubleSide, depthTest: false, depthWrite: false });
   const planeMesh = new THREE.Mesh(planeGeo, planeMat);
   planeMesh.position.set(0, 0, displayZ);
   planeMesh.renderOrder = 1;
@@ -3154,7 +3224,7 @@ function buildZLowerLimitPlane(zLowerLimit, featureZ, sceneScale) {
     new THREE.Vector3(w/2, d/2, displayZ), new THREE.Vector3(-w/2, d/2, displayZ),
     new THREE.Vector3(-w/2, -d/2, displayZ),
   ]);
-  const borderMat = new THREE.LineBasicMaterial({ color: 0x555555, opacity: 0.5, transparent: true, depthTest: false, depthWrite: false });
+  const borderMat = new THREE.LineBasicMaterial({ color: SChex('red'), opacity: 0.5, transparent: true, depthTest: false, depthWrite: false });
   const border = new THREE.Line(borderGeo, borderMat);
   border.renderOrder = 1;
   group.add(border);
@@ -3162,7 +3232,7 @@ function buildZLowerLimitPlane(zLowerLimit, featureZ, sceneScale) {
   scene.add(group);
   sceneObjects.zLowerLimitPlane = group;
 
-  addLabel(new THREE.Vector3(w / 2 + 10, 0, displayZ), `Z Lower Limit (${zLowerLimit} mm)`, 'label-gray');
+  addLabel(new THREE.Vector3(w / 2 + 10, 0, displayZ), `Z Lower Limit (${zLowerLimit} mm)`, 'label-red');
 }
 
 function buildToolVector(featureOrigin, normal, toolLen, color, groupKey, sceneScale, toolRadius, featureZOffset, diskColor, xyOffset) {
@@ -3403,12 +3473,12 @@ function buildReachTool(normal, toolLen, corDisplayZ, sceneScale, reachable, too
   // Tool tip: CoR + toolLen along surface normal direction (toward feature)
   const tipPos = corPos.clone().add(dispDir.clone().multiplyScalar(toolLen));
 
-  const reachColor = (reachable === false) ? SChex('red') : 0x555555;
+  const reachColor = (reachable === false) ? SChex('red') : 0x00cccc;
 
   // Tool shaft
   const shaftRadius = sceneScale * 0.008;
   const cylGeo = new THREE.CylinderGeometry(shaftRadius, shaftRadius, toolLen, 8);
-  const cylMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.3, transparent: true, opacity: 0.4, depthTest: false });
+  const cylMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.75, depthTest: false });
   const cyl = new THREE.Mesh(cylGeo, cylMat);
   cyl.position.copy(tipPos.clone().add(corPos).multiplyScalar(0.5));
   cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), upDir);
@@ -3417,21 +3487,21 @@ function buildReachTool(normal, toolLen, corDisplayZ, sceneScale, reachable, too
   // Tip — disk or sphere
   if (toolRadius && toolRadius > 0) {
     const diskGeo = new THREE.CircleGeometry(toolRadius, 32);
-    const diskMat = new THREE.MeshBasicMaterial({ color: reachColor, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false, depthTest: false });
+    const diskMat = new THREE.MeshBasicMaterial({ color: reachColor, transparent: true, opacity: 0.65, side: THREE.DoubleSide, depthWrite: false, depthTest: false });
     const disk = new THREE.Mesh(diskGeo, diskMat);
     disk.position.copy(tipPos);
     disk.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upDir);
     group.add(disk);
     const edgeThickness = Math.max(0.5, toolRadius * 0.03);
     const ringGeo = new THREE.TorusGeometry(toolRadius, edgeThickness, 12, 32);
-    const ringMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.8, transparent: true, opacity: 0.8, depthWrite: false, depthTest: false });
+    const ringMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.9, transparent: true, opacity: 0.9, depthWrite: false, depthTest: false });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.position.copy(tipPos);
     ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upDir);
     group.add(ring);
   } else {
     const tipGeo = new THREE.SphereGeometry(sceneScale * 0.028, 16, 16);
-    const tipMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.5, depthTest: false });
+    const tipMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.7, transparent: true, opacity: 0.85, depthTest: false });
     const tip = new THREE.Mesh(tipGeo, tipMat);
     tip.position.copy(tipPos);
     group.add(tip);
@@ -3439,7 +3509,7 @@ function buildReachTool(normal, toolLen, corDisplayZ, sceneScale, reachable, too
 
   // CoR ball
   const pivotGeo = new THREE.SphereGeometry(sceneScale * 0.025, 12, 12);
-  const pivotMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.5, depthTest: false });
+  const pivotMat = new THREE.MeshStandardMaterial({ color: reachColor, emissive: reachColor, emissiveIntensity: 0.7, transparent: true, opacity: 0.85, depthTest: false });
   const pivot = new THREE.Mesh(pivotGeo, pivotMat);
   pivot.position.copy(corPos);
   group.add(pivot);
@@ -3596,8 +3666,8 @@ function updateScene(skipReframe) {
   }
   buildMachiningPlane(sceneScale);
 
-  if (s.partHeight !== null || s.zStone !== null) {
-    buildStone(s.partHeight, s.zStone, fz, sceneScale);
+  if (s.partHeight !== null || s.zStone !== null || (s.platformHeight && s.platformHeight > 0)) {
+    buildStone(s.partHeight, s.platformHeight || 0, s.zStone, fz, sceneScale);
   }
 
   // Pivot position in display coords (unclamped)
@@ -3789,6 +3859,48 @@ document.addEventListener('keydown', function(e) {
       showFileName(handle.name);
     }
   } catch (e) {}
+})();
+
+// ── Panel resize drag handle ──────────────────────────
+(function() {
+  const handle = document.getElementById('panel-resize-handle');
+  const panel  = document.querySelector('.left-panel');
+  if (!handle || !panel) return;
+
+  const MIN_W = 260;
+  const MAX_W = 700;
+  const STORAGE_KEY = 'planeCalc_panelWidth';
+
+  // Restore saved width
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) panel.style.width = saved + 'px';
+
+  let startX, startW;
+
+  handle.addEventListener('mousedown', e => {
+    e.preventDefault();
+    startX = e.clientX;
+    startW = panel.offsetWidth;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    function onMove(e) {
+      const w = Math.min(MAX_W, Math.max(MIN_W, startW + e.clientX - startX));
+      panel.style.width = w + 'px';
+      if (typeof resize === 'function') resize();
+    }
+    function onUp() {
+      handle.classList.remove('dragging');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      localStorage.setItem(STORAGE_KEY, panel.offsetWidth);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
 })();
 
 </script>
