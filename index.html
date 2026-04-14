@@ -571,12 +571,12 @@
         </div>
         <div id="angles-input-row" class="hidden">
           <div class="field-row">
-            <label>C axis (tilt)</label>
+            <label>Inclination (tilt)</label>
             <input type="number" id="in-angle-c" value="" step="0.1" min="0" max="90" placeholder="0 - 90">
             <span class="unit">deg</span>
           </div>
           <div class="field-row">
-            <label>A axis (azimuth)</label>
+            <label>Rotation (azimuth)</label>
             <input type="number" id="in-angle-a" value="" step="0.1" min="-180" max="180" placeholder="-180 to 180">
             <span class="unit">deg</span>
           </div>
@@ -661,8 +661,8 @@
           <table class="batch-table">
             <thead><tr>
               <th onclick="setBatchSort('name')" style="cursor:pointer;user-select:none">Name <span id="sort-name"></span></th>
-              <th onclick="setBatchSort('C')" style="cursor:pointer;user-select:none">C° <span id="sort-C"></span></th>
-              <th onclick="setBatchSort('A')" style="cursor:pointer;user-select:none">A° <span id="sort-A"></span></th>
+              <th onclick="setBatchSort('C')" style="cursor:pointer;user-select:none">Incl° <span id="sort-C"></span></th>
+              <th onclick="setBatchSort('A')" style="cursor:pointer;user-select:none">Rot° <span id="sort-A"></span></th>
               <th onclick="setBatchSort('machining')" style="cursor:pointer;user-select:none">Machining <span id="sort-machining"></span></th>
               <th onclick="setBatchSort('clearance')" style="cursor:pointer;user-select:none">Clearance <span id="sort-clearance"></span></th>
             </tr></thead>
@@ -1393,8 +1393,8 @@ function showParsed(plane, A, C) {
     <span class="lbl">Name:</span><span class="val">${plane.name || '(unnamed)'}</span>
     <span class="lbl">Origin:</span><span class="val">${plane.origin.map(v => v.toFixed(4)).join(', ')}</span>
     <span class="lbl">Normal (row 3):</span><span class="val">${n.map(v => v.toFixed(6)).join(', ')}</span>
-    <span class="lbl">C (tilt):</span><span class="val">${toDeg(C).toFixed(2)}&deg;</span>
-    <span class="lbl">A (azimuth):</span><span class="val">${aDisplayDeg(A).toFixed(2)}&deg;</span>
+    <span class="lbl">Inclination (tilt):</span><span class="val">${toDeg(C).toFixed(2)}&deg;</span>
+    <span class="lbl">Rotation (azimuth):</span><span class="val">${aDisplayDeg(A).toFixed(2)}&deg;</span>
   `;
 }
 
@@ -1550,9 +1550,9 @@ function showAnalysis(a) {
       })() : ''}
       ${marginToReach !== null ? (() => {
         const c = marginToReach > 5 ? 'color-green' : (marginToReach >= 0 ? 'color-warn' : 'color-red');
-        return `<span class="lbl">To C to reach mach.:</span><span class="val ${c}">${marginToReach >= 0 ? '+' : ''}${marginToReach.toFixed(2)}&deg;</span>`;
+        return `<span class="lbl">To Incl. to reach mach.:</span><span class="val ${c}">${marginToReach >= 0 ? '+' : ''}${marginToReach.toFixed(2)}&deg;</span>`;
       })() : ''}
-      <span class="lbl">To C axis max (90&deg;):</span><span class="val ${marginToCAxis > 5 ? 'color-green' : 'color-warn'}">${marginToCAxis.toFixed(2)}&deg;</span>
+      <span class="lbl">To Incl. max (90&deg;):</span><span class="val ${marginToCAxis > 5 ? 'color-green' : 'color-warn'}">${marginToCAxis.toFixed(2)}&deg;</span>
       <span class="lbl">Usable range:</span><span class="val">${rangeMin.toFixed(1)}&deg; &ndash; ${rangeMax.toFixed(1)}&deg; (${(rangeMax - rangeMin).toFixed(1)}&deg;)</span>
     </div></div>
   </div>`;

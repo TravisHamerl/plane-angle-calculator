@@ -140,7 +140,7 @@ Top, Front, Back, Right, Left preset camera positions. Camera state (position, t
 Load a file with multiple planes (separated by `----`). The calculator:
 1. Parses all planes
 2. Computes feasibility for each
-3. Shows batch table with sortable columns (A°, C°, machining/clearance status)
+3. Shows batch table with sortable columns (Rotation, Inclination, machining/clearance status)
 4. Filter buttons: All, Used, Warning, Axis Limit
 5. Status basis toggle: `Both | Machining | Clearance` — controls which constraints are included in row status
 6. Click any row to view that plane in detail + 3D
@@ -150,8 +150,8 @@ Load a file with multiple planes (separated by `----`). The calculator:
 | Column | Meaning |
 |--------|---------|
 | Name | Plane name |
-| C° | Tilt angle |
-| A° | Azimuth angle (display convention) |
+| Incl° | Inclination — tilt angle |
+| Rot° | Rotation — azimuth angle (display convention) |
 | Machining | Status: OK (green) / CLOSE (orange) / EXCEEDED or UNREACHABLE (red) |
 | Clearance | Status: OK (green) / CLOSE (orange) / EXCEEDED (red) / — (no data) |
 
