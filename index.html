@@ -3861,49 +3861,159 @@ document.addEventListener('keydown', function(e) {
   } catch (e) {}
 })();
 
-// ── URL-hash plane injection ──────────────────────────
-// Lets other apps (e.g. the Mastercam Planes Manager) hand off plane data
-// without needing the user to click "Open File" + grant permission.
+// ── External-app bridge ────────────────────────────────
+// Lets other apps (specifically the Mastercam Planes Manager) hand off
+// plane data + machine/tool parameters without a file-picker permission
+// grant, any URL-length limits, or any URL decorators at all.
 //
-// Usage:
-//   file:///path/to/index.html#planes=<URI-encoded Mastercam-format text>
+// Protocol:
+//   Caller writes `_bridge_data.js` NEXT TO this index.html with content:
+//       window.__planeManagerBridge = {
+//         ts: <unix-seconds>,
+//         planes: "<Mastercam-format plane text>",
+//         params: { zUpper, zTravel, toolLen, machLevel, safety,
+//                   toolRadius, radiusMode, partHeight, platformH,
+//                   clearance }
+//       };
+//   Caller then opens `file:///.../index.html` (no query, no fragment).
 //
-// The text uses the same format as a loaded .txt file — multiple planes
-// separated by lines of four or more dashes. If the hash is present:
-//   1. the textarea is populated with the decoded text,
-//   2. the file-handle state is cleared (we're no longer tied to a disk file),
-//   3. calculate() runs, which auto-detects batch vs. single-plane from the
-//      presence of dashed separators,
-//   4. the hash is cleared from the URL so a reload won't re-inject stale data.
+// Why no URL parameters?
+//   ShellExecute on Windows strips both `?query` and `#fragment` from
+//   file:// URLs before handing them to the browser. We used to try each
+//   in turn and they both failed silently. Instead we unconditionally
+//   attempt to load `_bridge_data.js` on every page load. A freshness
+//   check (`ts` within BRIDGE_MAX_AGE_S seconds of now) keeps stale data
+//   from reapplying if the user later opens the Calculator standalone.
+//
+// `_bridge_data.js` is generated and should stay out of git
+// (see .gitignore).
+const BRIDGE_MAX_AGE_S = 60;
+// Visible status banner so failures don't fail silently. Auto-dismisses
+// after a successful apply; sticks around on error so the user can read it.
+function _bridgeStatus(msg, color) {
+  let div = document.getElementById('__bridge_status');
+  if (!div) {
+    div = document.createElement('div');
+    div.id = '__bridge_status';
+    div.style.cssText =
+      'position:fixed;top:0;left:0;right:0;z-index:99999;' +
+      'padding:6px 12px;font-family:monospace;font-size:12px;' +
+      'text-align:center;';
+    (document.body || document.documentElement).appendChild(div);
+  }
+  div.style.background = color || '#333';
+  div.style.color = '#fff';
+  div.textContent = 'Bridge: ' + msg;
+  return div;
+}
+
 (function() {
-  const raw = window.location.hash;
-  if (!raw || !raw.startsWith('#planes=')) return;
-  let text;
-  try {
-    text = decodeURIComponent(raw.slice('#planes='.length));
-  } catch (e) {
-    console.warn('Could not decode #planes= payload:', e);
+  // Unconditionally try to load the bridge file. If it doesn't exist, the
+  // script tag fires onerror and we bail silently (the common case — the
+  // Calculator is being used standalone). If it loads, a freshness check
+  // inside applyBridgePayload decides whether to actually apply.
+  //
+  // Cache-buster uses Date.now() so we never serve a stale copy the
+  // browser cached from a previous launch.
+  const s = document.createElement('script');
+  s.src = '_bridge_data.js?v=' + Date.now();
+  s.onload = () => {
+    // Defer application one tick so loadSettings() has already restored
+    // the prior session's form values — we apply on top.
+    setTimeout(() => {
+      try { applyBridgePayload(window.__planeManagerBridge); }
+      catch (e) {
+        console.error('bridge apply failed:', e);
+        _bridgeStatus('apply failed: ' + (e && e.message || e), '#a83232');
+      }
+    }, 0);
+  };
+  s.onerror = () => {
+    // Expected when the Calculator is opened standalone. Silent.
+  };
+  document.head.appendChild(s);
+})();
+
+// Apply a bridge payload: write machine/tool params first, then the
+// plane text. Fires calculate() so the user sees results immediately.
+function applyBridgePayload(data) {
+  if (!data || typeof data !== 'object') {
+    // Not a valid payload — could be a leftover empty file. Silent.
     return;
   }
-  if (!text.trim()) return;
 
-  // Defer to the next tick so loadSettings() + initScene() have run.
-  setTimeout(() => {
-    try {
-      const ta = document.getElementById('in-plane');
-      if (!ta) return;
-      ta.value = text;
+  // Freshness check: ignore stale handoffs. Prevents a _bridge_data.js
+  // left behind by an earlier session from reapplying when the user
+  // opens the Calculator standalone minutes/hours later.
+  const age = (Date.now() / 1000) - Number(data.ts || 0);
+  if (!Number.isFinite(age) || age > BRIDGE_MAX_AGE_S || age < -5) {
+    console.info('bridge: ignoring stale payload (age=' + age.toFixed(1) + 's)');
+    return;
+  }
+
+  _bridgeStatus('applying handoff from Planes Manager …', '#1b5fb0');
+
+  // 1. Machine / tool parameters. Any missing or null value is left alone
+  //    so the user's own saved settings survive where the manager doesn't
+  //    override them.
+  const p = data.params || {};
+  const setIf = (id, value) => {
+    if (value === null || value === undefined || value === '') return;
+    const el = document.getElementById(id);
+    if (el) el.value = String(value);
+  };
+  setIf('in-zlimit',           p.zUpper);
+  setIf('in-ztravel',          p.zTravel);
+  setIf('in-toollen',          p.toolLen);
+  setIf('in-zfeature',         p.machLevel);
+  setIf('in-warntolerance',    p.safety);
+  setIf('in-toolradius',       p.toolRadius);
+  setIf('in-partheight',       p.partHeight);
+  setIf('in-platformheight',   p.platformH);
+  setIf('in-clearanceheight',  p.clearance);
+  if (p.radiusMode !== undefined) {
+    const mm = document.getElementById('in-machmode');
+    if (mm) mm.value = p.radiusMode ? 'radius' : 'center';
+  }
+
+  // 2. Plane text. Empty/whitespace means "params only" — leave the
+  //    current plane input alone so the user can rerun their existing
+  //    file against new machine params if they want.
+  const planes = (data.planes || '').trim();
+  if (planes) {
+    const ta = document.getElementById('in-plane');
+    if (ta) {
+      ta.value = data.planes;
       fileHandle = null;
       showFileName('(from Planes Manager)');
-      saveSettings();
-      window.calculate();
-      // Scrub the hash so a refresh doesn't re-apply the payload.
-      history.replaceState(null, '', window.location.pathname + window.location.search);
-    } catch (e) {
-      console.error('URL-hash plane injection failed:', e);
     }
-  }, 0);
-})();
+  }
+
+  saveSettings();
+  // calculate() picks up both new params and new plane text; auto-detects
+  // batch vs single-plane from the `----` separators.
+  if (typeof window.calculate === 'function') window.calculate();
+
+  // Report what we applied, then fade the banner.
+  const planeCount = (data.planes || '').trim()
+    ? (data.planes.split(/^-{4,}$/m).filter(b => b.trim()).length)
+    : 0;
+  const paramCount = Object.keys(data.params || {})
+    .filter(k => data.params[k] !== null && data.params[k] !== undefined && data.params[k] !== '').length;
+  _bridgeStatus(
+    'applied ' + planeCount + ' plane' + (planeCount === 1 ? '' : 's') +
+    ' + ' + paramCount + ' param' + (paramCount === 1 ? '' : 's'),
+    '#2a7a2a'
+  );
+  setTimeout(() => {
+    const el = document.getElementById('__bridge_status');
+    if (el) el.remove();
+  }, 2500);
+
+  // Scrub the query string so a browser refresh doesn't re-apply the
+  // (possibly stale) bridge file.
+  history.replaceState(null, '', window.location.pathname);
+}
 
 // ── Panel resize drag handle ──────────────────────────
 (function() {
