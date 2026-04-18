@@ -3861,6 +3861,50 @@ document.addEventListener('keydown', function(e) {
   } catch (e) {}
 })();
 
+// ── URL-hash plane injection ──────────────────────────
+// Lets other apps (e.g. the Mastercam Planes Manager) hand off plane data
+// without needing the user to click "Open File" + grant permission.
+//
+// Usage:
+//   file:///path/to/index.html#planes=<URI-encoded Mastercam-format text>
+//
+// The text uses the same format as a loaded .txt file — multiple planes
+// separated by lines of four or more dashes. If the hash is present:
+//   1. the textarea is populated with the decoded text,
+//   2. the file-handle state is cleared (we're no longer tied to a disk file),
+//   3. calculate() runs, which auto-detects batch vs. single-plane from the
+//      presence of dashed separators,
+//   4. the hash is cleared from the URL so a reload won't re-inject stale data.
+(function() {
+  const raw = window.location.hash;
+  if (!raw || !raw.startsWith('#planes=')) return;
+  let text;
+  try {
+    text = decodeURIComponent(raw.slice('#planes='.length));
+  } catch (e) {
+    console.warn('Could not decode #planes= payload:', e);
+    return;
+  }
+  if (!text.trim()) return;
+
+  // Defer to the next tick so loadSettings() + initScene() have run.
+  setTimeout(() => {
+    try {
+      const ta = document.getElementById('in-plane');
+      if (!ta) return;
+      ta.value = text;
+      fileHandle = null;
+      showFileName('(from Planes Manager)');
+      saveSettings();
+      window.calculate();
+      // Scrub the hash so a refresh doesn't re-apply the payload.
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    } catch (e) {
+      console.error('URL-hash plane injection failed:', e);
+    }
+  }, 0);
+})();
+
 // ── Panel resize drag handle ──────────────────────────
 (function() {
   const handle = document.getElementById('panel-resize-handle');
